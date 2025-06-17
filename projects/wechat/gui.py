@@ -140,25 +140,24 @@ class WeChatGui:
         try:
             # 将微信窗口置于前台
             self.bring_wechat_to_front()
-
-            # 获取窗口位置和大小
-            left, top, right, bottom = self.wechat_rect
-            width = right - left
-            height = bottom - top
-
-            # 截取指定区域的截图
-            screenshot = pyautogui.screenshot(
-                region=(left, top, width, height))
-
-            # 保存截图
-            screenshot.save(save_path)
-            print(f"截图已保存: {save_path}")
-
-            return screenshot
-
+            return self.screenshot_by_rect(save_path, self.wechat_rect)
         except Exception as e:
             print(f"截图失败: {e}")
             return None
+
+    def screenshot_by_rect(self, save_path, rect):
+        """截取指定区域的截图"""
+        if not rect:
+            print("未指定窗口 rect")
+            return None
+        left, top, right, bottom = rect
+        width = right - left
+        height = bottom - top
+        screenshot = pyautogui.screenshot(
+            region=(left, top, width, height))
+        screenshot.save(save_path)
+        print(f"截图已保存: {save_path}")
+        return screenshot
 
     def screenshot_moment(self, save_path):
         """截取朋友圈截图"""
@@ -171,19 +170,7 @@ class WeChatGui:
             self.bring_moment_window_to_front()
             time.sleep(2)
 
-            # 获取窗口位置和大小
-            left, top, right, bottom = self.moment_rect
-            width = right - left
-            height = bottom - top
-
-            # 截取指定区域的截图
-            screenshot = pyautogui.screenshot(
-                region=(left, top, width, height))
-
-            # 保存截图
-            screenshot.save(save_path)
-            print(f"截图已保存: {save_path}")
-            return screenshot
+            return self.screenshot_by_rect(save_path, self.moment_rect)
         except Exception as e:
             print(f"截图失败: {e}")
             return None
@@ -270,7 +257,6 @@ class WeChatGui:
         self.find_moment_window()
         # 7. 将朋友圈窗口置于前台，并等待加载
         self.bring_moment_window_to_front()
-        time.sleep(2)
         # 8. 截取朋友圈截图
         self.screenshot_moment(
             "assets/images/wechat/current_moment_screenshot.png"
@@ -278,6 +264,19 @@ class WeChatGui:
         # 9. 点击发朋友圈的弹窗按钮
         self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
                             "assets/images/wechat/moment_step_2.png", 0.7, relative=True, rect=self.moment_rect)
+
+        # 10. 点击弹窗中的写文字输入框
+        self.screenshot_moment(
+            "assets/images/wechat/current_moment_screenshot.png"
+        )
+        self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
+                            "assets/images/wechat/moment_step_3.png", 0.7, relative=True, rect=self.moment_rect)
+        time.sleep(0.5)
+        # 11. 输入文字
+        pyautogui.typewrite("Hello, World!")
+        # 12. 点击发送按钮
+        self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
+                            "assets/images/wechat/moment_step_4.png", 0.7, relative=True, rect=self.moment_rect)
 
 
 if __name__ == "__main__":
