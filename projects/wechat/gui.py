@@ -226,51 +226,54 @@ class WeChatGui:
             }
         return None
 
-    def select_images_from_dialog(self, image_paths):
+    def select_images_from_dialog(self, image_folder, image_names):
         """
-        在文件选择对话框中选择图片
+        在文件选择对话框中选择多张图片（调用方传入图片目录和文件名列表）
         Args:
-            image_paths (list): 图片文件路径列表
-
+            image_folder (str): 图片所在文件夹路径
+            image_names (list): 图片文件名列表（不含路径）
         """
         try:
-            for i, image_path in enumerate(image_paths):
-                if not os.path.exists(image_path):
-                    print(f"图片文件不存在: {image_path}")
-                    continue
-                print(f"选择图片: {image_path}")
-                # 将文件路径复制到剪贴板
-                pyperclip.copy(image_path)
+            if not image_names:
+                print("未提供图片文件名")
+                return False
+            if not os.path.isdir(image_folder):
+                print(f"图片文件夹不存在: {image_folder}")
+                return False
 
-                # 在文件对话框的地址栏粘贴路径
-                pyautogui.hotkey('ctrl', 'l')  # 或者 F4 激活地址栏
-                time.sleep(0.5)
+            # 检查所有图片是否存在
+            for name in image_names:
+                full_path = os.path.join(image_folder, name)
+                if not os.path.exists(full_path):
+                    print(f"图片文件不存在: {full_path}")
+                    return False
 
-                # 清空地址栏内容
-                pyautogui.hotkey('ctrl', 'a')  # 全选
-                time.sleep(0.5)
-                pyautogui.press('delete')  # 删除或者用 backspace
-                time.sleep(0.5)
+            filenames_str = ' '.join(image_names)
 
-                pyautogui.hotkey('ctrl', 'v')  # 粘贴路径
-                time.sleep(0.5)
-                pyautogui.press('enter')  # 确认
-                time.sleep(1)
-
-                # 如果是第一张图片，直接选择
-                # 如果是多张图片，需要按住Ctrl键选择
-                if i == 0:
-                    pyautogui.press('enter')  # 选择第一张图片
-                else:
-                    pyautogui.keyDown('ctrl')
-                    pyautogui.press('enter')
-                    pyautogui.keyUp('ctrl')
-
-                time.sleep(1)
-
-            # 点击确定按钮（通常是"打开"按钮）
+            # 1. 进入目标文件夹
+            pyperclip.copy(image_folder)
+            pyautogui.hotkey('ctrl', 'l')  # 激活地址栏
+            time.sleep(0.5)
+            pyautogui.hotkey('ctrl', 'a')  # 全选
+            time.sleep(0.2)
+            pyautogui.press('delete')
+            time.sleep(0.2)
+            pyautogui.hotkey('ctrl', 'v')  # 粘贴文件夹路径
+            time.sleep(0.5)
             pyautogui.press('enter')
-            print(f"已选择 {len(image_paths)} 张图片")
+            time.sleep(1)
+
+            # 2. 粘贴所有文件名到文件名输入框
+            pyperclip.copy(filenames_str)
+            # 通常文件名输入框已自动聚焦，否则可用tab多次
+            pyautogui.hotkey('ctrl', 'a')  # 全选
+            time.sleep(0.2)
+            pyautogui.press('delete')
+            time.sleep(0.2)
+            pyautogui.hotkey('ctrl', 'v')  # 粘贴文件名
+            time.sleep(0.5)
+            pyautogui.press('enter')  # 确认选择
+            print(f"已选择 {len(image_names)} 张图片")
             time.sleep(2)  # 等待图片加载
             return True
         except Exception as e:
