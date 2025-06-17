@@ -248,7 +248,7 @@ class WeChatGui:
             #         print(f"图片文件不存在: {full_path}")
             #         return False
 
-            filenames_str = ' '.join(image_names)
+            filenames_str = ' '.join(f'"{name}"' for name in image_names)
 
             # 1. 进入目标文件夹
             pyperclip.copy(image_folder)
