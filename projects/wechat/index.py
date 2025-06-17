@@ -72,11 +72,11 @@ class WeChat:
             image_dir, ["moment_step_3.png", "current_screenshot_blank.png"])
 
         # 13. 点击发送按钮
-        # self.wechat_gui.screenshot_moment(
-        #     "assets/images/wechat/current_moment_screenshot.png"
-        # )
-        # self.wechat_gui.click_by_image("assets/images/wechat/current_moment_screenshot.png",
-        #                                "assets/images/wechat/moment_step_4.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
+        self.wechat_gui.screenshot_moment(
+            "assets/images/wechat/current_moment_screenshot.png"
+        )
+        self.wechat_gui.click_by_image("assets/images/wechat/current_moment_screenshot.png",
+                                       "assets/images/wechat/moment_step_3.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
 
 if (__name__ == "__main__"):
 	wechat = WeChat()
