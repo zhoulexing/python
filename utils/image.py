@@ -96,3 +96,10 @@ class ImageUtils:
             "diffPercentage": float(diff_percentage),
             "totalPixels": int(total_pixels)
         }
+
+
+if __name__ == "__main__":
+    image_utils = ImageUtils()
+    result = image_utils.image_matcher(
+        'assets/images/wechat/current_screenshot_white.png', 'assets/images/wechat/moment_step_1.png')
+    print(result)
