@@ -3,3 +3,5 @@ uvicorn[standard]>=0.15.0
 opencv-python
 numpy
 pillow
+torch
+matplotlib
