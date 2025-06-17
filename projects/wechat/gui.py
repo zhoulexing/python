@@ -247,10 +247,10 @@ class WeChatGui:
                 time.sleep(0.5)
 
                 # 清空地址栏内容
-				pyautogui.hotkey('ctrl', 'a')  # 全选
-				time.sleep(0.5)
-				pyautogui.press('delete')  # 删除或者用 backspace
-				time.sleep(0.5)
+                pyautogui.hotkey('ctrl', 'a')  # 全选
+                time.sleep(0.5)
+                pyautogui.press('delete')  # 删除或者用 backspace
+                time.sleep(0.5)
 
                 pyautogui.hotkey('ctrl', 'v')  # 粘贴路径
                 time.sleep(0.5)
