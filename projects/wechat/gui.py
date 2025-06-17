@@ -4,6 +4,8 @@ import time
 import win32gui
 import win32con
 from utils.image import ImageUtils
+import os
+import pyperclip
 
 image_utils = ImageUtils()
 
@@ -224,65 +226,45 @@ class WeChatGui:
             }
         return None
 
-    def start(self):
-        # 1. 打开微信
-        print("正在打开微信...")
-        if not self.open_wechat():
-            print("打开微信失败")
-            return
+    def select_images_from_dialog(self, image_paths):
+        """
+        在文件选择对话框中选择图片
+        Args:
+            image_paths (list): 图片文件路径列表
 
-        # 2. 查找微信窗口
-        print("正在查找微信窗口...")
-        if not self.find_wechat_window():
-            print("未找到微信窗口，请确保微信已启动")
-            return
+        """
+        try:
+            for i, image_path in enumerate(image_paths):
+                if not os.path.exists(image_path):
+                    print(f"图片文件不存在: {image_path}")
+                    continue
+                # 将文件路径复制到剪贴板
+                pyperclip.copy(image_path)
 
-        # 3. 显示微信窗口信息
-        info = self.get_wechat_info()
-        if info:
-            print(f"微信窗口信息: {info}")
+                # 在文件对话框的地址栏粘贴路径
+                pyautogui.hotkey('ctrl', 'l')  # 或者 F4 激活地址栏
+                time.sleep(0.5)
+                pyautogui.hotkey('ctrl', 'v')  # 粘贴路径
+                time.sleep(0.5)
+                pyautogui.press('enter')  # 确认
+                time.sleep(1)
 
-        # 4. 截取微信截图
-        print("正在截取微信截图...")
-        screenshot = self.screenshot_wechat(
-            "assets/images/wechat/current_wechat_screenshot.png"
-        )
-        if screenshot:
-            print("截图失败")
+                # 如果是第一张图片，直接选择
+                # 如果是多张图片，需要按住Ctrl键选择
+                if i == 0:
+                    pyautogui.press('enter')  # 选择第一张图片
+                else:
+                    pyautogui.keyDown('ctrl')
+                    pyautogui.press('enter')
+                    pyautogui.keyUp('ctrl')
 
-        # 5. 进入朋友圈
-        self.click_by_image("assets/images/wechat/current_wechat_screenshot.png",
-                            "assets/images/wechat/moment_step_1.png", 0.7, relative=True, rect=self.wechat_rect)
-        # 6. 查找朋友圈窗口
-        self.find_moment_window()
-        # 7. 将朋友圈窗口置于前台，并等待加载
-        self.bring_moment_window_to_front()
-        # 8. 截取朋友圈截图
-        self.screenshot_moment(
-            "assets/images/wechat/current_moment_screenshot.png"
-        )
-        # 9. 点击发朋友圈的弹窗按钮
-        self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
-                            "assets/images/wechat/moment_step_2.png", 0.7, relative=True, rect=self.moment_rect)
+                time.sleep(0.5)
 
-        # 10. 点击弹窗中的写文字输入框
-        self.screenshot_moment(
-            "assets/images/wechat/current_moment_screenshot.png"
-        )
-        self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
-                            "assets/images/wechat/moment_step_3.png", 0.7, relative=True, rect=self.moment_rect)
-        time.sleep(0.5)
-        # 11. 输入文字
-        pyautogui.typewrite("Hello, World!")
-        time.sleep(1)
-        # 12. 点击发送按钮
-        self.screenshot_moment(
-            "assets/images/wechat/current_moment_screenshot.png"
-        )
-        self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
-                            "assets/images/wechat/moment_step_4.png", 0.7, relative=True, rect=self.moment_rect)
-
-
-if __name__ == "__main__":
-    wechat = WeChatGui()
-    wechat.start()
+            # 点击确定按钮（通常是"打开"按钮）
+            pyautogui.press('enter')
+            print(f"已选择 {len(image_paths)} 张图片")
+            time.sleep(2)  # 等待图片加载
+            return True
+        except Exception as e:
+            print(f"选择图片失败: {e}")
+            return False
