@@ -238,12 +238,20 @@ class WeChatGui:
                 if not os.path.exists(image_path):
                     print(f"图片文件不存在: {image_path}")
                     continue
+                print(f"选择图片: {image_path}")
                 # 将文件路径复制到剪贴板
                 pyperclip.copy(image_path)
 
                 # 在文件对话框的地址栏粘贴路径
                 pyautogui.hotkey('ctrl', 'l')  # 或者 F4 激活地址栏
                 time.sleep(0.5)
+
+                # 清空地址栏内容
+				pyautogui.hotkey('ctrl', 'a')  # 全选
+				time.sleep(0.5)
+				pyautogui.press('delete')  # 删除或者用 backspace
+				time.sleep(0.5)
+
                 pyautogui.hotkey('ctrl', 'v')  # 粘贴路径
                 time.sleep(0.5)
                 pyautogui.press('enter')  # 确认
@@ -258,7 +266,7 @@ class WeChatGui:
                     pyautogui.press('enter')
                     pyautogui.keyUp('ctrl')
 
-                time.sleep(0.5)
+                time.sleep(1)
 
             # 点击确定按钮（通常是"打开"按钮）
             pyautogui.press('enter')
