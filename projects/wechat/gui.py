@@ -274,7 +274,11 @@ class WeChatGui:
         time.sleep(0.5)
         # 11. 输入文字
         pyautogui.typewrite("Hello, World!")
+        time.sleep(1)
         # 12. 点击发送按钮
+        self.screenshot_moment(
+            "assets/images/wechat/current_moment_screenshot.png"
+        )
         self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
                             "assets/images/wechat/moment_step_4.png", 0.7, relative=True, rect=self.moment_rect)
 
