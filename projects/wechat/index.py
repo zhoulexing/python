@@ -67,8 +67,8 @@ class WeChat:
         time.sleep(1)
         image_dir = os.path.join(os.path.dirname(__file__), "../../assets/images")
         self.wechat_gui.select_images_from_dialog([
-            os.path.join(image_dir, "wechat/moment_step_3.png"),
-            os.path.join(image_dir, "wechat/current_screenshot_blank.png")
+            os.path.abspath(os.path.normpath(os.path.join(image_dir, "wechat/moment_step_3.png"))),
+            os.path.abspath(os.path.normpath(os.path.join(image_dir, "wechat/current_screenshot_blank.png"))),
         ])
 
         # # 13. 点击发送按钮
