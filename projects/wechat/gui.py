@@ -43,39 +43,21 @@ class WeChatGui:
         except Exception as e:
             print(f"启动微信失败: {e}")
             return False
-    
-    def click_moment_popup_button(self):
-        """点击朋友圈弹窗按钮"""
+
+    def click_by_image(self, image_path, template_image_path, threshold=0.7, relative=True, rect=None):
+        """根据图片点击"""
         result = image_utils.image_matcher(
-            'assets/images/wechat/current_moment_screenshot.png', 'assets/images/wechat/moment_step_2.png')
+            image_path, template_image_path, threshold)
         if len(result) == 0:
-            raise Exception("未找到朋友圈弹窗按钮")
+            raise Exception("未找到图片")
         else:
             x = result[0]['x']
             y = result[0]['y']
             width = result[0]['width']
             height = result[0]['height']
-            print(f"朋友圈弹窗按钮的坐标: ({x}, {y}, {width}, {height})")
-            self.click_at_coordinate(int(x + width / 2), int(y + height / 2), relative=True)
-
-    def entry_moment(self):
-        """进入朋友圈"""
-        result = image_utils.image_matcher(
-            'assets/images/wechat/current_wechat_screenshot.png', 'assets/images/wechat/moment_step_1.png')
-        if len(result) == 0:
-            raise Exception("未找到朋友圈的图标")
-        else:
-            x = result[0]['x']
-            y = result[0]['y']
-            width = result[0]['width']
-            height = result[0]['height']
-            print(f"朋友圈的坐标: ({x}, {y}, {width}, {height})")
-
-            # 5. 在指定坐标点击（相对于微信窗口的坐标）
-            print("3秒后将在坐标")
-            time.sleep(3)
-            wechat.click_at_coordinate(
-                int(x + width / 2), int(y + height / 2), relative=True)
+            print(f"图片的坐标: ({x}, {y}, {width}, {height})")
+            self.click_at_coordinate(
+                int(x + width / 2), int(y + height / 2), relative, rect=rect)
 
     def find_moment_window(self):
         """查找朋友圈窗口"""
@@ -206,32 +188,30 @@ class WeChatGui:
             print(f"截图失败: {e}")
             return None
 
-    def click_at_coordinate(self, x, y, relative=True):
+    def click_at_coordinate(self, x, y, relative=True, rect=None):
         """
         在指定坐标点击
 
         Args:
             x (int): X坐标
             y (int): Y坐标
-            relative (bool): True表示相对于微信窗口的坐标，False表示屏幕绝对坐标
+            relative (bool): True表示相对于窗口的坐标，False表示屏幕绝对坐标
+            rect (tuple or None): 指定窗口的 (left, top, right, bottom)，relative=True 时用来计算绝对坐标，未传则默认用微信主窗口
         """
-        if not self.wechat_window or not self.wechat_rect:
-            print("请先找到微信窗口")
-            return False
-
         try:
-            # 将微信窗口置于前台
-            self.bring_wechat_to_front()
-
             if relative:
-                # 相对坐标转换为绝对坐标
-                left, top, right, bottom = self.wechat_rect
+                # 使用传入的 rect 或默认的 self.wechat_rect
+                use_rect = rect if rect is not None else self.wechat_rect
+                if not use_rect:
+                    print("未指定窗口 rect，且未找到默认窗口 rect")
+                    return False
+                left, top, right, bottom = use_rect
                 abs_x = left + x
                 abs_y = top + y
 
                 # 检查坐标是否在窗口范围内
                 if abs_x < left or abs_x > right or abs_y < top or abs_y > bottom:
-                    print(f"坐标({x}, {y})超出微信窗口范围")
+                    print(f"坐标({x}, {y})超出窗口范围")
                     return False
             else:
                 abs_x, abs_y = x, y
@@ -285,7 +265,8 @@ class WeChatGui:
             print("截图失败")
 
         # 5. 进入朋友圈
-        self.entry_moment()
+        self.click_by_image("assets/images/wechat/current_wechat_screenshot.png",
+                            "assets/images/wechat/moment_step_1.png", 0.7, relative=True, rect=self.wechat_rect)
         # 6. 查找朋友圈窗口
         self.find_moment_window()
         # 7. 将朋友圈窗口置于前台，并等待加载
@@ -296,7 +277,8 @@ class WeChatGui:
             "assets/images/wechat/current_moment_screenshot.png"
         )
         # 9. 点击发朋友圈的弹窗按钮
-        self.click_moment_popup_button()
+        self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
+                            "assets/images/wechat/moment_step_2.png", 0.7, relative=True, rect=self.moment_rect)
 
 
 if __name__ == "__main__":
