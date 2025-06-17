@@ -201,6 +201,21 @@ def main():
     print("3秒后将在坐标")
     time.sleep(3)
     wechat.click_at_coordinate(int(x + width / 2), int(y + height / 2), relative=True)
+    # 新增：等待朋友圈窗口加载
+    time.sleep(2)
+    # 朋友圈区域大致在主窗口的右侧，假设主窗口左上角为(left, top)
+    left, top, right, bottom = wechat.wechat_rect
+    # 朋友圈内容区域大致偏右偏上，具体偏移可根据实际调整
+    feed_x = left + (right - left) * 0.7
+    feed_y = top + 120  # 距离顶部约120像素，避开顶部栏
+    # 移动鼠标到朋友圈内容区域
+    pyautogui.moveTo(feed_x, feed_y)
+    # 向上滚动多次，确保回到顶部
+    for _ in range(5):
+        pyautogui.scroll(500)
+        time.sleep(0.2)
+    # 再次点击顶部区域，进入最新朋友圈
+    pyautogui.click(feed_x, feed_y)
 
 if __name__ == "__main__":
     main()
