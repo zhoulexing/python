@@ -254,7 +254,6 @@ class WeChatGui:
         info = self.get_wechat_info()
         if info:
             print(f"微信窗口信息: {info}")
-            return
 
         # 4. 截取微信截图
         print("正在截取微信截图...")
