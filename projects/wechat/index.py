@@ -1,7 +1,7 @@
 from .gui import WeChatGui
 import time
 import pyautogui
-
+import os
 
 class WeChat:
     def __init__(self):
@@ -65,9 +65,10 @@ class WeChat:
         self.wechat_gui.click_by_image("assets/images/wechat/current_moment_screenshot.png",
                                        "assets/images/wechat/moment_step_image.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
         time.sleep(1)
+        image_dir = os.path.join(os.path.dirname(__file__), "../../assets/images")
         self.wechat_gui.select_images_from_dialog([
-            "C:/Users/zhoulexing/code/python/assets/images/wechat/current_screenshot_blank.png",
-            "C:/Users/zhoulexing/code/python/assets/images/wechat/moment_step_3.png"
+            os.path.join(image_dir, "wechat/moment_step_3.png"),
+            os.path.join(image_dir, "wechat/current_screenshot_blank.png")
         ])
 
         # # 13. 点击发送按钮
