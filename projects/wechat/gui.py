@@ -21,9 +21,9 @@ class WeChatGui:
             # 尝试通过常见路径启动微信
             wechat_paths = [
                 r"C:\Program Files (x86)\Tencent\WeChat\WeChat.exe",
+                r"C:\Program Files (x86)\Tencent\Weixin\Weixin.exe",
                 r"C:\Program Files\Tencent\WeChat\WeChat.exe",
-                r"D:\Program Files (x86)\Tencent\WeChat\WeChat.exe",
-                r"D:\Program Files\Tencent\WeChat\WeChat.exe"
+                r"C:\Program Files\Tencent\Weixin\Weixin.exe",
             ]
 
             for path in wechat_paths:
