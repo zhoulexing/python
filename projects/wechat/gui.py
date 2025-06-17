@@ -242,11 +242,11 @@ class WeChatGui:
                 return False
 
             # 检查所有图片是否存在
-            for name in image_names:
-                full_path = os.path.join(image_folder, name)
-                if not os.path.exists(full_path):
-                    print(f"图片文件不存在: {full_path}")
-                    return False
+            # for name in image_names:
+            #     full_path = os.path.join(image_folder, name)
+            #     if not os.path.exists(full_path):
+            #         print(f"图片文件不存在: {full_path}")
+            #         return False
 
             filenames_str = ' '.join(image_names)
 
@@ -265,7 +265,7 @@ class WeChatGui:
 
             # 2. 粘贴所有文件名到文件名输入框
             pyperclip.copy(filenames_str)
-            # 通常文件名输入框已自动聚焦，否则可用tab多次
+            pyautogui.hotkey('alt', 'n')  # 激活文件名输入框
             pyautogui.hotkey('ctrl', 'a')  # 全选
             time.sleep(0.2)
             pyautogui.press('delete')
