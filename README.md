@@ -12,3 +12,8 @@
 # 学习资源
 
 # 学习成果
+
+
+
+C:\Users\zhoulexing\code\python\assets\images\wechat\current_screenshot_blank.png
+C:\Users\zhoulexing\code\python\assets\images\wechat\moment_step_4.png

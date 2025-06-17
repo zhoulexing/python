@@ -1,4 +1,4 @@
-from gui import WeChatGui
+from .gui import WeChatGui
 import time
 import pyautogui
 
@@ -35,7 +35,7 @@ class WeChat:
 
         # 5. 进入朋友圈
         self.wechat_gui.click_by_image("assets/images/wechat/current_wechat_screenshot.png",
-                                       "assets/images/wechat/moment_step_1.png", 0.7, relative=True, rect=self.wechat_rect)
+                                       "assets/images/wechat/moment_step_1.png", 0.7, relative=True, rect=self.wechat_gui.wechat_rect)
         # 6. 查找朋友圈窗口
         self.wechat_gui.find_moment_window()
         # 7. 将朋友圈窗口置于前台，并等待加载
@@ -67,7 +67,7 @@ class WeChat:
         time.sleep(1)
         self.wechat_gui.select_images_from_dialog([
             "C:/Users/zhoulexing/code/python/assets/images/wechat/current_screenshot_blank.png",
-            "C:/Users/zhoulexing/code/python/assets/images/wechat/moment_step_4.png"
+            "C:/Users/zhoulexing/code/python/assets/images/wechat/moment_step_3.png"
         ])
 
         # # 13. 点击发送按钮
@@ -76,3 +76,7 @@ class WeChat:
         # )
         # self.wechat_gui.click_by_image("assets/images/wechat/current_moment_screenshot.png",
         #                                "assets/images/wechat/moment_step_4.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
+
+if (__name__ == "__main__"):
+    wechat = WeChat()
+    wechat.start()
