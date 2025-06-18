@@ -4,6 +4,7 @@ import subprocess
 import os
 from pathlib import Path
 import threading
+import shutil
 from _utils import *
 
 
@@ -16,6 +17,10 @@ class WeChatMultiLauncher:
         # 存储微信路径
         self.wechat_exe_path = None
         self.wechat_dll_path = None
+
+        # 设置工作目录（用户文档目录下的WeChat_Multi文件夹）
+        self.work_dir = Path.home() / "Documents" / "WeChat_Multi"
+        self.work_dir.mkdir(exist_ok=True)
 
         # 记录已创建的实例
         self.created_instances = set()
@@ -176,7 +181,7 @@ class WeChatMultiLauncher:
         self.status_text.delete(1.0, tk.END)
 
     def create_wechat_instance(self, n):
-        """创建微信实例（基于原代码逻辑）"""
+        """创建微信实例（修改保存路径）"""
         try:
             if not self.wechat_exe_path or not self.wechat_dll_path:
                 raise Exception("请先设置微信路径")
@@ -187,15 +192,22 @@ class WeChatMultiLauncher:
             if not self.wechat_dll_path.exists():
                 raise Exception("Weixin.dll 文件不存在")
 
-            # 检查是否已经创建过
-            new_exe = self.wechat_exe_path.with_name(f"Weixin{n}.exe")
-            new_dll = self.wechat_dll_path.with_name(f"Weixin.dl{n}")
+            # 修改：保存到工作目录而不是原始目录
+            new_exe = self.work_dir / f"Weixin{n}.exe"
+            new_dll = self.work_dir / f"Weixin.dl{n}"
+
+            # 检查进程是否在运行
+            if self.is_process_running(f"Weixin{n}.exe"):
+                raise Exception(f"微信实例 {n} 正在运行，请先关闭")
 
             if new_exe.exists() and new_dll.exists():
                 self.log(f"微信实例 {n} 已存在，跳过创建")
                 return True
 
             self.log(f"正在创建微信实例 {n}...")
+
+            # 复制所有必要的文件到工作目录
+            self.copy_required_files(n)
 
             # 处理 EXE 文件
             self.log(f"处理 Weixin{n}.exe...")
@@ -239,40 +251,89 @@ class WeChatMultiLauncher:
             save(new_dll, dll_data)
 
             self.created_instances.add(n)
-            self.log(f"微信实例 {n} 创建成功")
+            self.log(f"微信实例 {n} 创建成功，保存位置: {self.work_dir}")
             return True
 
         except Exception as e:
             self.log(f"创建微信实例 {n} 失败: {str(e)}")
             return False
 
+    def copy_required_files(self, n):
+        """复制微信运行所需的文件"""
+        try:
+            wechat_dir = self.wechat_exe_path.parent
+
+            # 需要复制的文件列表（根据实际情况调整）
+            required_files = [
+                "WeChatResource.dll",
+                "WeChatOCR.exe",
+                "WeChatOCR.dll",
+                "WeChatBrowser.exe",
+                "WeChatApp.exe",
+                # 添加其他必要的文件
+            ]
+
+            for file_name in required_files:
+                src_file = wechat_dir / file_name
+                if src_file.exists():
+                    dst_file = self.work_dir / file_name
+                    if not dst_file.exists():
+                        shutil.copy2(src_file, dst_file)
+                        self.log(f"复制文件: {file_name}")
+
+            # 复制资源文件夹（如果存在）
+            resource_dirs = ["Resources", "Plugins", "locales"]
+            for dir_name in resource_dirs:
+                src_dir = wechat_dir / dir_name
+                if src_dir.exists():
+                    dst_dir = self.work_dir / dir_name
+                    if not dst_dir.exists():
+                        shutil.copytree(src_dir, dst_dir)
+                        self.log(f"复制目录: {dir_name}")
+
+        except Exception as e:
+            self.log(f"复制文件失败: {str(e)}")
+            
+    def is_process_running(self, process_name):
+        """检查进程是否在运行"""
+        try:
+            import psutil
+            for proc in psutil.process_iter(['name']):
+                if proc.info['name'] == process_name:
+                    return True
+            return False
+        except ImportError:
+            return False
+        except:
+            return False
+
     def launch_wechat(self, n):
-        """启动微信实例"""
+        """启动微信实例（修改启动路径）"""
         def launch_thread():
             try:
                 # 先创建实例（如果不存在）
                 if n not in self.created_instances:
                     if not self.create_wechat_instance(n):
                         return
-
-                # 启动微信
-                exe_path = self.wechat_exe_path.with_name(f"Weixin{n}.exe")
+                
+                # 修改：从工作目录启动
+                exe_path = self.work_dir / f"Weixin{n}.exe"
                 if not exe_path.exists():
                     self.log(f"微信实例 {n} 不存在，正在创建...")
                     if not self.create_wechat_instance(n):
                         return
-
+                
                 self.log(f"正在启动微信实例 {n}...")
-
-                # 启动进程
-                process = subprocess.Popen([str(exe_path)],
-                                           cwd=str(exe_path.parent))
-
+                
+                # 启动进程（设置工作目录为我们的工作目录）
+                process = subprocess.Popen([str(exe_path)], 
+                                         cwd=str(self.work_dir))
+                
                 self.log(f"微信实例 {n} 启动成功 (PID: {process.pid})")
-
+                
             except Exception as e:
                 self.log(f"启动微信实例 {n} 失败: {str(e)}")
-
+        
         # 在新线程中执行，避免阻塞UI
         threading.Thread(target=launch_thread, daemon=True).start()
 
