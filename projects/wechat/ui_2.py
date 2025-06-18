@@ -247,23 +247,61 @@ class WeChatMultiLauncher:
         threading.Thread(target=launch_thread, daemon=True).start()
 
     def launch_with_sandbox(self, n):
-        """使用沙盒模式启动（推荐方式）"""
+        """使用沙盒模式启动（增强版）"""
         try:
             # 创建临时目录作为沙盒
             sandbox_dir = Path(tempfile.gettempdir()) / f"WeChat_Sandbox_{n}"
             sandbox_dir.mkdir(exist_ok=True)
 
+            # 标准用户目录
+            user_dirs = [
+                "AppData", "LocalAppData", "Temp", "Profile",
+                "Desktop", "Documents", "Downloads", "Pictures", "Music", "Videos",
+                "Favorites", "Links", "Saved Games", "Searches", "Contacts", "3D Objects"
+            ]
+            for dir_name in user_dirs:
+                (sandbox_dir / dir_name).mkdir(exist_ok=True)
+
+            # 构造各目录路径
+            appdata = sandbox_dir / "AppData"
+            localappdata = sandbox_dir / "LocalAppData"
+            temp = sandbox_dir / "Temp"
+            profile = sandbox_dir / "Profile"
+            desktop = sandbox_dir / "Desktop"
+            documents = sandbox_dir / "Documents"
+            downloads = sandbox_dir / "Downloads"
+            pictures = sandbox_dir / "Pictures"
+            music = sandbox_dir / "Music"
+            videos = sandbox_dir / "Videos"
+            favorites = sandbox_dir / "Favorites"
+            links = sandbox_dir / "Links"
+            savedgames = sandbox_dir / "Saved Games"
+            searches = sandbox_dir / "Searches"
+            contacts = sandbox_dir / "Contacts"
+            objects3d = sandbox_dir / "3D Objects"
+
             # 设置环境变量
             env = os.environ.copy()
-            env['APPDATA'] = str(sandbox_dir / "AppData")
-            env['LOCALAPPDATA'] = str(sandbox_dir / "LocalAppData")
-            env['TEMP'] = str(sandbox_dir / "Temp")
-            env['TMP'] = str(sandbox_dir / "Temp")
-            env['USERPROFILE'] = str(sandbox_dir / "Profile")
-
-            # 创建必要的目录
-            for dir_name in ['AppData', 'LocalAppData', 'Temp', 'Profile']:
-                (sandbox_dir / dir_name).mkdir(exist_ok=True)
+            env['APPDATA'] = str(appdata)
+            env['LOCALAPPDATA'] = str(localappdata)
+            env['TEMP'] = str(temp)
+            env['TMP'] = str(temp)
+            env['USERPROFILE'] = str(profile)
+            env['HOMEPATH'] = str(profile)
+            env['HOMEDRIVE'] = sandbox_dir.drive if hasattr(sandbox_dir, 'drive') else os.path.splitdrive(str(sandbox_dir))[0]
+            env['DESKTOP'] = str(desktop)
+            env['DOCUMENTS'] = str(documents)
+            env['DOWNLOADS'] = str(downloads)
+            env['PICTURES'] = str(pictures)
+            env['MUSIC'] = str(music)
+            env['VIDEOS'] = str(videos)
+            env['FAVORITES'] = str(favorites)
+            env['LINKS'] = str(links)
+            env['SAVEDGAMES'] = str(savedgames)
+            env['SEARCHES'] = str(searches)
+            env['CONTACTS'] = str(contacts)
+            env['OBJECTS3D'] = str(objects3d)
+            # 保留 PUBLIC、ALLUSERSPROFILE 等为系统默认
 
             # 启动微信
             process = subprocess.Popen(
