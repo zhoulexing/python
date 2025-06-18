@@ -1,567 +1,351 @@
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk, messagebox, filedialog
 import subprocess
 import os
-from pathlib import Path
+import psutil
 import threading
-import winreg
-import tempfile
-import json
-import atexit
+import time
+from pathlib import Path
 
-
-class WeChatMultiLauncher:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("微信多开启动器 v3.0")
-        self.root.geometry("600x500")
-
-        # 存储微信路径
-        self.wechat_exe_path = None
-
-        # 配置文件路径
-        self.config_file = Path.home() / "Documents" / "wechat_multi_config.json"
-
-        # 运行中的进程
-        self.running_processes = {}
-
+class WeChatMultiOpener:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.wechat_processes = []
+        self.wechat_path = ""
         self.setup_ui()
-        self.load_config()
-        self.auto_detect_wechat()
+        self.find_wechat_path()
+        self.start_monitor_thread()
 
     def setup_ui(self):
+        """设置用户界面"""
+        self.root.title("微信多开工具")
+        self.root.geometry("500x600")
+        self.root.resizable(False, False)
+        
         # 主框架
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-
-        # 标题
-        title_label = ttk.Label(main_frame, text="微信多开启动器 v3.0",
-                                font=("Arial", 16, "bold"))
-        title_label.grid(row=0, column=0, columnspan=3, pady=(0, 20))
-
-        # 微信路径设置
-        path_frame = ttk.LabelFrame(main_frame, text="微信路径设置", padding="10")
-        path_frame.grid(row=1, column=0, columnspan=3,
-                        sticky=(tk.W, tk.E), pady=(0, 20))
-
-        # Weixin.exe 路径
-        ttk.Label(path_frame, text="微信路径:").grid(row=0, column=0, sticky=tk.W)
-        self.exe_path_var = tk.StringVar()
-        self.exe_path_entry = ttk.Entry(
-            path_frame, textvariable=self.exe_path_var, width=60)
-        self.exe_path_entry.grid(row=0, column=1, padx=(10, 5))
-        ttk.Button(path_frame, text="浏览",
-                   command=self.browse_exe).grid(row=0, column=2)
-
-        # 多开方式选择
-        method_frame = ttk.LabelFrame(main_frame, text="多开方式", padding="10")
-        method_frame.grid(row=2, column=0, columnspan=3,
-                          sticky=(tk.W, tk.E), pady=(0, 20))
-
-        self.method_var = tk.StringVar(value="sandbox")
-        ttk.Radiobutton(method_frame, text="沙盒模式（推荐）",
-                        variable=self.method_var, value="sandbox").grid(row=0, column=0, sticky=tk.W)
-        ttk.Radiobutton(method_frame, text="注册表模式",
-                        variable=self.method_var, value="registry").grid(row=0, column=1, sticky=tk.W, padx=(20, 0))
-        ttk.Radiobutton(method_frame, text="命令行模式",
-                        variable=self.method_var, value="cmdline").grid(row=0, column=2, sticky=tk.W, padx=(20, 0))
-
-        # 快速启动区域
-        launch_frame = ttk.LabelFrame(main_frame, text="快速启动", padding="10")
-        launch_frame.grid(row=3, column=0, columnspan=3,
-                          sticky=(tk.W, tk.E), pady=(0, 20))
-
-        # 创建10个启动按钮
-        self.launch_buttons = {}
-        self.status_labels = {}
-
-        for i in range(10):
-            row = i // 5
-            col = i % 5
-
-            # 按钮框架
-            btn_frame = ttk.Frame(launch_frame)
-            btn_frame.grid(row=row*2, column=col, padx=5, pady=5)
-
-            # 启动按钮
-            btn = ttk.Button(btn_frame, text=f"微信 {i}", width=12,
-                             command=lambda n=i: self.launch_wechat(n))
-            btn.pack()
-            self.launch_buttons[i] = btn
-
-            # 状态标签
-            status_label = ttk.Label(btn_frame, text="未运行", foreground="gray")
-            status_label.pack()
-            self.status_labels[i] = status_label
-
-        # 控制按钮
-        control_frame = ttk.Frame(launch_frame)
-        control_frame.grid(row=2, column=0, columnspan=5, pady=(10, 0))
-
-        ttk.Button(control_frame, text="关闭所有微信",
-                   command=self.close_all_wechat).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(control_frame, text="刷新状态",
-                   command=self.refresh_status).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(control_frame, text="清理缓存",
-                   command=self.clean_cache).pack(side=tk.LEFT)
-
-        # 状态显示
-        status_frame = ttk.LabelFrame(main_frame, text="状态信息", padding="10")
-        status_frame.grid(row=4, column=0, columnspan=3,
-                          sticky=(tk.W, tk.E, tk.N, tk.S))
-
-        # 状态文本框
-        self.status_text = tk.Text(status_frame, height=10, width=70)
-        scrollbar = ttk.Scrollbar(
-            status_frame, orient="vertical", command=self.status_text.yview)
-        self.status_text.configure(yscrollcommand=scrollbar.set)
-
-        self.status_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # 状态标签
+        self.status_label = ttk.Label(main_frame, text="微信路径: 检测中...", foreground="blue")
+        self.status_label.grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 10))
+        
+        # 按钮框架
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
+        
+        # 添加微信按钮
+        self.add_button = ttk.Button(button_frame, text="添加新微信窗口", command=self.add_wechat)
+        self.add_button.grid(row=0, column=0, padx=(0, 5))
+        
+        # 关闭所有按钮
+        self.close_all_button = ttk.Button(button_frame, text="关闭所有微信", command=self.close_all_wechat)
+        self.close_all_button.grid(row=0, column=1, padx=5)
+        
+        # 刷新按钮
+        self.refresh_button = ttk.Button(button_frame, text="刷新列表", command=self.refresh_process_list)
+        self.refresh_button.grid(row=0, column=2, padx=(5, 0))
+        
+        # 选择路径按钮
+        self.select_path_button = ttk.Button(button_frame, text="选择微信路径", command=self.select_wechat_path)
+        self.select_path_button.grid(row=1, column=0, columnspan=3, pady=(5, 0))
+        
+        # 进程列表标签
+        ttk.Label(main_frame, text="当前微信进程:").grid(row=2, column=0, sticky=tk.W, pady=(10, 5))
+        
+        # 进程列表框架
+        list_frame = ttk.Frame(main_frame)
+        list_frame.grid(row=3, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        
+        # 创建Treeview显示进程信息
+        columns = ('PID', '状态', '启动时间', '内存使用')
+        self.process_tree = ttk.Treeview(list_frame, columns=columns, show='headings', height=12)
+        
+        # 设置列标题
+        self.process_tree.heading('PID', text='进程ID')
+        self.process_tree.heading('状态', text='状态')
+        self.process_tree.heading('启动时间', text='启动时间')
+        self.process_tree.heading('内存使用', text='内存使用(MB)')
+        
+        # 设置列宽
+        self.process_tree.column('PID', width=80)
+        self.process_tree.column('状态', width=80)
+        self.process_tree.column('启动时间', width=150)
+        self.process_tree.column('内存使用', width=100)
+        
+        # 添加滚动条
+        scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=self.process_tree.yview)
+        self.process_tree.configure(yscrollcommand=scrollbar.set)
+        
+        self.process_tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        
+        # 绑定双击事件
+        self.process_tree.bind('<Double-1>', self.on_process_double_click)
+        
+        # 右键菜单
+        self.create_context_menu()
+        
+        # 统计信息
+        self.stats_label = ttk.Label(main_frame, text="运行中的微信进程: 0")
+        self.stats_label.grid(row=4, column=0, columnspan=3, sticky=tk.W, pady=(5, 0))
+        
+        # 说明文本
+        info_text = """使用说明:
+1. 点击"添加新微信窗口"来启动新的微信实例
+2. 双击列表中的进程可以关闭对应的微信
+3. 右键点击进程可以查看更多操作
+4. 程序会自动监控微信进程状态
 
-        # 配置网格权重
-        main_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(4, weight=1)
-        status_frame.columnconfigure(0, weight=1)
-        status_frame.rowconfigure(0, weight=1)
+注意: 微信多开可能存在封号风险，请谨慎使用！"""
+        
+        info_frame = ttk.LabelFrame(main_frame, text="使用说明", padding="5")
+        info_frame.grid(row=5, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(10, 0))
+        
+        info_label = ttk.Label(info_frame, text=info_text, foreground="red", font=("Arial", 8))
+        info_label.grid(row=0, column=0, sticky=tk.W)
+        
+        # 设置窗口关闭事件
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        self.log("微信多开启动器已启动")
+    def create_context_menu(self):
+        """创建右键菜单"""
+        self.context_menu = tk.Menu(self.root, tearoff=0)
+        self.context_menu.add_command(label="关闭此进程", command=self.close_selected_process)
+        self.context_menu.add_command(label="查看进程详情", command=self.show_process_details)
+        self.context_menu.add_separator()
+        self.context_menu.add_command(label="刷新", command=self.refresh_process_list)
+        
+        self.process_tree.bind('<Button-3>', self.show_context_menu)
 
-        # 启动状态刷新定时器
-        self.refresh_status()
-        self.root.after(5000, self.auto_refresh_status)
-
-    def auto_detect_wechat(self):
-        """自动检测微信路径"""
+    def show_context_menu(self, event):
+        """显示右键菜单"""
         try:
-            # 从注册表获取
-            wechat_path = self.get_wechat_path_from_registry()
-            if wechat_path:
-                exe_path = Path(wechat_path) / "WeChat.exe"
-                if not exe_path.exists():
-                    exe_path = Path(wechat_path) / "Weixin.exe"
+            self.context_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.context_menu.grab_release()
 
-                if exe_path.exists():
-                    self.exe_path_var.set(str(exe_path))
-                    self.wechat_exe_path = exe_path
-                    self.log(f"自动检测到微信路径: {exe_path}")
-                    self.save_config()
-                    return
-
-            # 常见路径检测
-            common_paths = [
-                r"C:\Program Files\Tencent\WeChat\WeChat.exe",
-                r"C:\Program Files (x86)\Tencent\WeChat\WeChat.exe",
-                r"C:\Program Files\Tencent\WeChat\Weixin.exe",
-                r"C:\Program Files (x86)\Tencent\WeChat\Weixin.exe",
-                r"D:\Program Files\Tencent\WeChat\WeChat.exe",
-                r"D:\Program Files (x86)\Tencent\WeChat\WeChat.exe"
-            ]
-
-            for path in common_paths:
-                if os.path.exists(path):
-                    self.exe_path_var.set(path)
-                    self.wechat_exe_path = Path(path)
-                    self.log(f"自动检测到微信路径: {path}")
-                    self.save_config()
-                    return
-
-            self.log("未能自动检测到微信路径，请手动选择")
-
-        except Exception as e:
-            self.log(f"自动检测失败: {str(e)}")
-
-    def get_wechat_path_from_registry(self):
-        """从注册表获取微信安装路径"""
-        try:
-            registry_paths = [
-                (winreg.HKEY_CURRENT_USER, r"Software\Tencent\WeChat"),
-                (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Tencent\WeChat"),
-                (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Tencent\WeChat"),
-                (winreg.HKEY_CURRENT_USER,
-                 r"Software\Microsoft\Windows\CurrentVersion\Uninstall\WeChat"),
-                (winreg.HKEY_LOCAL_MACHINE,
-                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\WeChat"),
-            ]
-
-            for hkey, subkey in registry_paths:
-                try:
-                    with winreg.OpenKey(hkey, subkey) as key:
-                        try:
-                            install_path, _ = winreg.QueryValueEx(
-                                key, "InstallPath")
-                        except FileNotFoundError:
-                            try:
-                                install_path, _ = winreg.QueryValueEx(
-                                    key, "InstallLocation")
-                            except FileNotFoundError:
-                                install_path, _ = winreg.QueryValueEx(
-                                    key, "DisplayIcon")
-                                install_path = str(Path(install_path).parent)
-
-                        if install_path and os.path.exists(install_path):
-                            return install_path
-                except (FileNotFoundError, OSError):
-                    continue
-
-            return None
-        except Exception:
-            return None
-
-    def launch_wechat(self, n):
-        """启动微信实例"""
-        def launch_thread():
-            try:
-                if not self.wechat_exe_path or not self.wechat_exe_path.exists():
-                    self.log("请先设置正确的微信路径")
-                    return
-
-                # 检查是否已经在运行
-                if n in self.running_processes:
-                    if self.running_processes[n].poll() is None:
-                        self.log(f"微信实例 {n} 已在运行")
-                        return
-                    else:
-                        del self.running_processes[n]
-
-                self.log(f"正在启动微信实例 {n}...")
-
-                method = self.method_var.get()
-
-                if method == "sandbox":
-                    process = self.launch_with_sandbox(n)
-                elif method == "registry":
-                    process = self.launch_with_registry(n)
-                else:
-                    process = self.launch_with_cmdline(n)
-
-                if process:
-                    self.running_processes[n] = process
-                    self.log(f"微信实例 {n} 启动成功 (PID: {process.pid})")
-                    self.update_button_status(n, "运行中", "green")
-                else:
-                    self.log(f"微信实例 {n} 启动失败")
-
-            except Exception as e:
-                self.log(f"启动微信实例 {n} 失败: {str(e)}")
-
-        threading.Thread(target=launch_thread, daemon=True).start()
-
-    def _backup_and_patch_user_shell_folders(self, sandbox_dir):
-        """备份并劫持注册表 User Shell Folders/Shell Folders"""
-        import winreg
-        user_shell_keys = [
-            r"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
-            r"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"
+    def find_wechat_path(self):
+        """查找微信安装路径"""
+        possible_paths = [
+            r"C:\Program Files (x86)\Tencent\WeChat\WeChat.exe",
+            r"C:\Program Files\Tencent\WeChat\WeChat.exe",
+            r"D:\Program Files (x86)\Tencent\WeChat\WeChat.exe",
+            r"D:\Program Files\Tencent\WeChat\WeChat.exe",
         ]
-        folder_map = {
-            "Desktop": sandbox_dir / "Desktop",
-            "Personal": sandbox_dir / "Documents",
-            "My Pictures": sandbox_dir / "Pictures",
-            "My Music": sandbox_dir / "Music",
-            "My Video": sandbox_dir / "Videos",
-            "Favorites": sandbox_dir / "Favorites",
-            "AppData": sandbox_dir / "AppData",
-            "Local AppData": sandbox_dir / "LocalAppData",
-        }
-        backup = {}
-        for key_path in user_shell_keys:
+        
+        for path in possible_paths:
+            if os.path.exists(path):
+                self.wechat_path = path
+                self.status_label.config(text=f"微信路径: {path}", foreground="green")
+                self.add_button.config(state="normal")
+                return
+        
+        self.status_label.config(text="未找到微信，请手动选择路径", foreground="red")
+        self.add_button.config(state="disabled")
+
+    def select_wechat_path(self):
+        """手动选择微信路径"""
+        file_path = filedialog.askopenfilename(
+            title="选择微信程序",
+            filetypes=[("可执行文件", "*.exe"), ("所有文件", "*.*")],
+            initialfile="WeChat.exe"
+        )
+        
+        if file_path:
+            self.wechat_path = file_path
+            self.status_label.config(text=f"微信路径: {file_path}", foreground="green")
+            self.add_button.config(state="normal")
+
+    def add_wechat(self):
+        """添加新的微信实例"""
+        if not self.wechat_path or not os.path.exists(self.wechat_path):
+            messagebox.showerror("错误", "微信路径无效，请重新选择！")
+            self.select_wechat_path()
+            return
+        
+        try:
+            # 启动微信进程
+            process = subprocess.Popen([self.wechat_path], 
+                                     cwd=os.path.dirname(self.wechat_path))
+            
+            # 等待进程启动
+            time.sleep(1)
+            
+            # 验证进程是否成功启动
+            if process.poll() is None:  # 进程仍在运行
+                self.wechat_processes.append(process)
+                messagebox.showinfo("成功", f"微信进程已启动！PID: {process.pid}")
+                self.refresh_process_list()
+            else:
+                messagebox.showerror("错误", "微信进程启动失败！")
+                
+        except Exception as e:
+            messagebox.showerror("错误", f"启动微信失败: {str(e)}")
+
+    def get_all_wechat_processes(self):
+        """获取所有微信进程"""
+        wechat_processes = []
+        try:
+            for proc in psutil.process_iter(['pid', 'name', 'create_time', 'memory_info', 'status']):
+                if proc.info['name'] and 'wechat' in proc.info['name'].lower():
+                    wechat_processes.append(proc)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+        return wechat_processes
+
+    def refresh_process_list(self):
+        """刷新进程列表"""
+        # 清空当前列表
+        for item in self.process_tree.get_children():
+            self.process_tree.delete(item)
+        
+        # 获取所有微信进程
+        processes = self.get_all_wechat_processes()
+        
+        for proc in processes:
             try:
-                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_READ | winreg.KEY_WRITE) as key:
-                    for name, path in folder_map.items():
-                        try:
-                            old_val, _ = winreg.QueryValueEx(key, name)
-                            backup[(key_path, name)] = old_val
-                            winreg.SetValueEx(key, name, 0, winreg.REG_EXPAND_SZ, str(path))
-                        except FileNotFoundError:
-                            continue
-            except Exception as e:
-                self.log(f"注册表劫持失败: {key_path}: {e}")
-        return backup
+                pid = proc.info['pid']
+                status = proc.info['status']
+                create_time = time.strftime('%Y-%m-%d %H:%M:%S', 
+                                          time.localtime(proc.info['create_time']))
+                memory_mb = round(proc.info['memory_info'].rss / 1024 / 1024, 1)
+                
+                self.process_tree.insert('', 'end', values=(pid, status, create_time, memory_mb))
+                
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+        
+        # 更新统计信息
+        self.stats_label.config(text=f"运行中的微信进程: {len(processes)}")
 
-    def _restore_user_shell_folders(self, backup):
-        import winreg
-        for (key_path, name), value in backup.items():
-            try:
-                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
-                    winreg.SetValueEx(key, name, 0, winreg.REG_EXPAND_SZ, value)
-            except Exception as e:
-                pass
+    def on_process_double_click(self, event):
+        """双击进程项时关闭进程"""
+        self.close_selected_process()
 
-    def launch_with_sandbox(self, n):
-        """使用沙盒模式启动（增强版+注册表劫持）"""
+    def close_selected_process(self):
+        """关闭选中的进程"""
+        selection = self.process_tree.selection()
+        if not selection:
+            messagebox.showwarning("警告", "请先选择一个进程！")
+            return
+        
+        item = selection[0]
+        pid = int(self.process_tree.item(item, 'values')[0])
+        
         try:
-            # 创建临时目录作为沙盒
-            sandbox_dir = Path(tempfile.gettempdir()) / f"WeChat_Sandbox_{n}"
-            sandbox_dir.mkdir(exist_ok=True)
-
-            # 标准用户目录
-            user_dirs = [
-                "AppData", "LocalAppData", "Temp", "Profile",
-                "Desktop", "Documents", "Downloads", "Pictures", "Music", "Videos",
-                "Favorites", "Links", "Saved Games", "Searches", "Contacts", "3D Objects"
-            ]
-            for dir_name in user_dirs:
-                (sandbox_dir / dir_name).mkdir(exist_ok=True)
-
-            # 关键微信文件夹
-            (sandbox_dir / "Documents" / "WeChat Files").mkdir(parents=True, exist_ok=True)
-            (sandbox_dir / "Documents" / "xwechat_files").mkdir(parents=True, exist_ok=True)
-            (sandbox_dir / "Documents" / "WeChatApp").mkdir(parents=True, exist_ok=True)
-
-            # 构造各目录路径
-            appdata = sandbox_dir / "AppData"
-            localappdata = sandbox_dir / "LocalAppData"
-            temp = sandbox_dir / "Temp"
-            profile = sandbox_dir / "Profile"
-            desktop = sandbox_dir / "Desktop"
-            documents = sandbox_dir / "Documents"
-            downloads = sandbox_dir / "Downloads"
-            pictures = sandbox_dir / "Pictures"
-            music = sandbox_dir / "Music"
-            videos = sandbox_dir / "Videos"
-            favorites = sandbox_dir / "Favorites"
-            links = sandbox_dir / "Links"
-            savedgames = sandbox_dir / "Saved Games"
-            searches = sandbox_dir / "Searches"
-            contacts = sandbox_dir / "Contacts"
-            objects3d = sandbox_dir / "3D Objects"
-
-            # 设置环境变量
-            env = os.environ.copy()
-            env['APPDATA'] = str(appdata)
-            env['LOCALAPPDATA'] = str(localappdata)
-            env['TEMP'] = str(temp)
-            env['TMP'] = str(temp)
-            env['USERPROFILE'] = str(profile)
-            env['HOMEPATH'] = str(profile)
-            env['HOMEDRIVE'] = sandbox_dir.drive if hasattr(sandbox_dir, 'drive') else os.path.splitdrive(str(sandbox_dir))[0]
-            env['DESKTOP'] = str(desktop)
-            env['DOCUMENTS'] = str(documents)
-            env['DOWNLOADS'] = str(downloads)
-            env['PICTURES'] = str(pictures)
-            env['MUSIC'] = str(music)
-            env['VIDEOS'] = str(videos)
-            env['FAVORITES'] = str(favorites)
-            env['LINKS'] = str(links)
-            env['SAVEDGAMES'] = str(savedgames)
-            env['SEARCHES'] = str(searches)
-            env['CONTACTS'] = str(contacts)
-            env['OBJECTS3D'] = str(objects3d)
-            # 保留 PUBLIC、ALLUSERSPROFILE 等为系统默认
-
-            # 注册表劫持
-            backup = self._backup_and_patch_user_shell_folders(sandbox_dir)
-            def restore_reg():
-                self._restore_user_shell_folders(backup)
-                self.log("已恢复注册表 User Shell Folders")
-            atexit.register(restore_reg)
-
-            # 启动微信
-            process = subprocess.Popen(
-                [str(self.wechat_exe_path)],
-                env=env,
-                cwd=str(self.wechat_exe_path.parent)
-            )
-
-            # 启动后监控进程，退出时恢复注册表
-            def monitor():
-                process.wait()
-                restore_reg()
-            threading.Thread(target=monitor, daemon=True).start()
-
-            return process
-
+            proc = psutil.Process(pid)
+            proc_name = proc.name()
+            
+            if messagebox.askyesno("确认", f"确定要关闭进程 {proc_name} (PID: {pid}) 吗？"):
+                proc.terminate()
+                time.sleep(0.5)
+                
+                if proc.is_running():
+                    proc.kill()  # 强制关闭
+                
+                messagebox.showinfo("成功", f"进程 {pid} 已关闭")
+                self.refresh_process_list()
+                
+        except psutil.NoSuchProcess:
+            messagebox.showinfo("信息", "进程已经不存在了")
+            self.refresh_process_list()
+        except psutil.AccessDenied:
+            messagebox.showerror("错误", "没有权限关闭此进程")
         except Exception as e:
-            self.log(f"沙盒模式启动失败: {str(e)}")
-            return None
+            messagebox.showerror("错误", f"关闭进程失败: {str(e)}")
 
-    def launch_with_registry(self, n):
-        """使用注册表模式启动"""
+    def show_process_details(self):
+        """显示进程详细信息"""
+        selection = self.process_tree.selection()
+        if not selection:
+            messagebox.showwarning("警告", "请先选择一个进程！")
+            return
+        
+        item = selection[0]
+        pid = int(self.process_tree.item(item, 'values')[0])
+        
         try:
-            # 创建临时注册表项
-            reg_key = f"Software\\Tencent\\WeChat_{n}"
-
-            # 启动微信并传递实例标识
-            process = subprocess.Popen(
-                [str(self.wechat_exe_path), f"--multi-instance={n}"],
-                cwd=str(self.wechat_exe_path.parent)
-            )
-
-            return process
-
+            proc = psutil.Process(pid)
+            
+            details = f"""进程详细信息:
+PID: {proc.pid}
+名称: {proc.name()}
+状态: {proc.status()}
+CPU使用率: {proc.cpu_percent()}%
+内存使用: {round(proc.memory_info().rss / 1024 / 1024, 1)} MB
+创建时间: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(proc.create_time()))}
+可执行文件: {proc.exe()}
+命令行: {' '.join(proc.cmdline())}"""
+            
+            messagebox.showinfo("进程详情", details)
+            
+        except psutil.NoSuchProcess:
+            messagebox.showinfo("信息", "进程已经不存在了")
+        except psutil.AccessDenied:
+            messagebox.showerror("错误", "没有权限访问此进程信息")
         except Exception as e:
-            self.log(f"注册表模式启动失败: {str(e)}")
-            return None
-
-    def launch_with_cmdline(self, n):
-        """使用命令行模式启动"""
-        try:
-            # 使用不同的命令行参数
-            args = [
-                str(self.wechat_exe_path),
-                f"--user-data-dir={Path.home() / 'Documents' / f'WeChat_User_{n}'}",
-                f"--instance-id={n}"
-            ]
-
-            process = subprocess.Popen(
-                args,
-                cwd=str(self.wechat_exe_path.parent)
-            )
-
-            return process
-
-        except Exception as e:
-            self.log(f"命令行模式启动失败: {str(e)}")
-            return None
+            messagebox.showerror("错误", f"获取进程信息失败: {str(e)}")
 
     def close_all_wechat(self):
         """关闭所有微信进程"""
-        try:
-            import psutil
+        processes = self.get_all_wechat_processes()
+        
+        if not processes:
+            messagebox.showinfo("信息", "没有找到运行中的微信进程")
+            return
+        
+        if messagebox.askyesno("确认", f"确定要关闭所有 {len(processes)} 个微信进程吗？"):
             closed_count = 0
-
-            # 关闭记录的进程
-            for n, process in list(self.running_processes.items()):
+            for proc in processes:
                 try:
-                    if process.poll() is None:
-                        process.terminate()
-                        closed_count += 1
-                        self.update_button_status(n, "未运行", "gray")
-                except:
-                    pass
-
-            self.running_processes.clear()
-
-            # 关闭所有微信相关进程
-            for proc in psutil.process_iter(['pid', 'name']):
-                try:
-                    if proc.info['name'] and any(name in proc.info['name'].lower() for name in ['wechat', 'weixin']):
-                        proc.terminate()
-                        closed_count += 1
+                    proc.terminate()
+                    closed_count += 1
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
+            
+            time.sleep(1)
+            
+            # 强制关闭仍在运行的进程
+            for proc in processes:
+                try:
+                    if proc.is_running():
+                        proc.kill()
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+            
+            messagebox.showinfo("完成", f"已关闭 {closed_count} 个微信进程")
+            self.refresh_process_list()
 
-            if closed_count > 0:
-                self.log(f"已关闭 {closed_count} 个微信进程")
-                import time
-                time.sleep(1)
-                self.refresh_status()
-            else:
-                self.log("没有找到运行中的微信进程")
+    def start_monitor_thread(self):
+        """启动监控线程"""
+        def monitor():
+            while True:
+                try:
+                    self.root.after(0, self.refresh_process_list)
+                    time.sleep(3)  # 每3秒刷新一次
+                except:
+                    break
+        
+        monitor_thread = threading.Thread(target=monitor, daemon=True)
+        monitor_thread.start()
 
-        except ImportError:
-            self.log("需要安装 psutil 库: pip install psutil")
-            # 尝试使用 taskkill 命令
-            try:
-                subprocess.run(['taskkill', '/f', '/im', 'WeChat.exe'],
-                               capture_output=True, check=False)
-                subprocess.run(['taskkill', '/f', '/im', 'Weixin.exe'],
-                               capture_output=True, check=False)
-                self.log("已尝试关闭微信进程")
-                self.running_processes.clear()
-                self.refresh_status()
-            except:
-                pass
-        except Exception as e:
-            self.log(f"关闭微信进程失败: {str(e)}")
+    def on_closing(self):
+        """窗口关闭事件"""
+        if messagebox.askokcancel("退出", "确定要退出微信多开工具吗？"):
+            self.root.destroy()
 
-    def refresh_status(self):
-        """刷新运行状态"""
-        try:
-            # 检查记录的进程状态
-            for n in list(self.running_processes.keys()):
-                process = self.running_processes[n]
-                if process.poll() is not None:
-                    # 进程已结束
-                    del self.running_processes[n]
-                    self.update_button_status(n, "未运行", "gray")
-                else:
-                    self.update_button_status(n, "运行中", "green")
-
-            # 检查未记录的进程
-            for i in range(10):
-                if i not in self.running_processes:
-                    self.update_button_status(i, "未运行", "gray")
-
-        except Exception as e:
-            self.log(f"刷新状态失败: {str(e)}")
-
-    def auto_refresh_status(self):
-        """自动刷新状态"""
-        self.refresh_status()
-        self.root.after(5000, self.auto_refresh_status)
-
-    def update_button_status(self, n, status, color):
-        """更新按钮状态"""
-        if n in self.status_labels:
-            self.status_labels[n].config(text=status, foreground=color)
-
-    def clean_cache(self):
-        """清理缓存"""
-        try:
-            # 清理沙盒目录
-            temp_dir = Path(tempfile.gettempdir())
-            for i in range(10):
-                sandbox_dir = temp_dir / f"WeChat_Sandbox_{i}"
-                if sandbox_dir.exists():
-                    import shutil
-                    shutil.rmtree(sandbox_dir, ignore_errors=True)
-
-            self.log("缓存清理完成")
-
-        except Exception as e:
-            self.log(f"清理缓存失败: {str(e)}")
-
-    def browse_exe(self):
-        """浏览选择微信程序"""
-        filename = filedialog.askopenfilename(
-            title="选择微信程序",
-            filetypes=[("可执行文件", "*.exe"), ("所有文件", "*.*")]
-        )
-        if filename:
-            self.exe_path_var.set(filename)
-            self.wechat_exe_path = Path(filename)
-            self.save_config()
-            self.log(f"已设置微信路径: {filename}")
-
-    def load_config(self):
-        """加载配置"""
-        try:
-            if self.config_file.exists():
-                with open(self.config_file, 'r', encoding='utf-8') as f:
-                    config = json.load(f)
-                    if 'wechat_path' in config:
-                        self.exe_path_var.set(config['wechat_path'])
-                        self.wechat_exe_path = Path(config['wechat_path'])
-        except Exception as e:
-            self.log(f"加载配置失败: {str(e)}")
-
-    def save_config(self):
-        """保存配置"""
-        try:
-            config = {
-                'wechat_path': str(self.wechat_exe_path) if self.wechat_exe_path else ""
-            }
-            with open(self.config_file, 'w', encoding='utf-8') as f:
-                json.dump(config, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            self.log(f"保存配置失败: {str(e)}")
-
-    def log(self, message):
-        """添加日志信息"""
-        import datetime
-        timestamp = datetime.datetime.now().strftime("%H:%M:%S")
-        self.status_text.insert(tk.END, f"[{timestamp}] {message}\n")
-        self.status_text.see(tk.END)
-        self.root.update_idletasks()
-
-
-def main():
-    root = tk.Tk()
-    app = WeChatMultiLauncher(root)
-    root.mainloop()
-
+    def run(self):
+        """运行程序"""
+        self.root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    # 检查是否安装了必要的库
+    try:
+        import psutil
+    except ImportError:
+        print("请先安装 psutil 库: pip install psutil")
+        exit(1)
+    
+    app = WeChatMultiOpener()
+    app.run()
