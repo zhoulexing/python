@@ -7,6 +7,7 @@ import threading
 import winreg
 import tempfile
 import json
+import atexit
 
 
 class WeChatMultiLauncher:
@@ -246,8 +247,49 @@ class WeChatMultiLauncher:
 
         threading.Thread(target=launch_thread, daemon=True).start()
 
+    def _backup_and_patch_user_shell_folders(self, sandbox_dir):
+        """备份并劫持注册表 User Shell Folders/Shell Folders"""
+        import winreg
+        user_shell_keys = [
+            r"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
+            r"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"
+        ]
+        folder_map = {
+            "Desktop": sandbox_dir / "Desktop",
+            "Personal": sandbox_dir / "Documents",
+            "My Pictures": sandbox_dir / "Pictures",
+            "My Music": sandbox_dir / "Music",
+            "My Video": sandbox_dir / "Videos",
+            "Favorites": sandbox_dir / "Favorites",
+            "AppData": sandbox_dir / "AppData",
+            "Local AppData": sandbox_dir / "LocalAppData",
+        }
+        backup = {}
+        for key_path in user_shell_keys:
+            try:
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_READ | winreg.KEY_WRITE) as key:
+                    for name, path in folder_map.items():
+                        try:
+                            old_val, _ = winreg.QueryValueEx(key, name)
+                            backup[(key_path, name)] = old_val
+                            winreg.SetValueEx(key, name, 0, winreg.REG_EXPAND_SZ, str(path))
+                        except FileNotFoundError:
+                            continue
+            except Exception as e:
+                self.log(f"注册表劫持失败: {key_path}: {e}")
+        return backup
+
+    def _restore_user_shell_folders(self, backup):
+        import winreg
+        for (key_path, name), value in backup.items():
+            try:
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
+                    winreg.SetValueEx(key, name, 0, winreg.REG_EXPAND_SZ, value)
+            except Exception as e:
+                pass
+
     def launch_with_sandbox(self, n):
-        """使用沙盒模式启动（增强版）"""
+        """使用沙盒模式启动（增强版+注册表劫持）"""
         try:
             # 创建临时目录作为沙盒
             sandbox_dir = Path(tempfile.gettempdir()) / f"WeChat_Sandbox_{n}"
@@ -261,6 +303,11 @@ class WeChatMultiLauncher:
             ]
             for dir_name in user_dirs:
                 (sandbox_dir / dir_name).mkdir(exist_ok=True)
+
+            # 关键微信文件夹
+            (sandbox_dir / "Documents" / "WeChat Files").mkdir(parents=True, exist_ok=True)
+            (sandbox_dir / "Documents" / "xwechat_files").mkdir(parents=True, exist_ok=True)
+            (sandbox_dir / "Documents" / "WeChatApp").mkdir(parents=True, exist_ok=True)
 
             # 构造各目录路径
             appdata = sandbox_dir / "AppData"
@@ -303,12 +350,25 @@ class WeChatMultiLauncher:
             env['OBJECTS3D'] = str(objects3d)
             # 保留 PUBLIC、ALLUSERSPROFILE 等为系统默认
 
+            # 注册表劫持
+            backup = self._backup_and_patch_user_shell_folders(sandbox_dir)
+            def restore_reg():
+                self._restore_user_shell_folders(backup)
+                self.log("已恢复注册表 User Shell Folders")
+            atexit.register(restore_reg)
+
             # 启动微信
             process = subprocess.Popen(
                 [str(self.wechat_exe_path)],
                 env=env,
                 cwd=str(self.wechat_exe_path.parent)
             )
+
+            # 启动后监控进程，退出时恢复注册表
+            def monitor():
+                process.wait()
+                restore_reg()
+            threading.Thread(target=monitor, daemon=True).start()
 
             return process
 
