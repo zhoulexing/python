@@ -9,6 +9,9 @@ import json
 import os
 from threading import Thread
 import time
+import shutil
+import tempfile
+import datetime
 
 
 class WeChatManager:
@@ -135,14 +138,14 @@ class WeChatManager:
         self.refresh_script_list()
 
     def launch_wechat(self):
-        """启动新的微信实例"""
+        """启动新的微信实例，支持多开（通过复制目录方式）"""
         try:
             # 微信安装路径，需要根据实际情况修改
             wechat_paths = [
                 r"C:\Program Files (x86)\Tencent\WeChat\WeChat.exe",
+                r"C:\Program Files (x86)\Tencent\Weixin\Weixin.exe",
                 r"C:\Program Files\Tencent\WeChat\WeChat.exe",
-                r"D:\Program Files (x86)\Tencent\WeChat\WeChat.exe",
-                r"D:\Program Files\Tencent\WeChat\WeChat.exe"
+                r"C:\Program Files\Tencent\Weixin\Weixin.exe",
             ]
 
             wechat_path = None
@@ -155,8 +158,20 @@ class WeChatManager:
                 messagebox.showerror("错误", "未找到微信安装路径，请手动指定")
                 return
 
-            # 启动微信
-            process = subprocess.Popen([wechat_path])
+            # 获取微信主程序目录
+            wechat_dir = os.path.dirname(wechat_path)
+            # 生成唯一的临时目录名
+            base_temp_dir = os.path.join(os.path.expanduser("~"), "WeChat_multi")
+            if not os.path.exists(base_temp_dir):
+                os.makedirs(base_temp_dir)
+            # 用时间戳或自增编号防止冲突
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            temp_dir = os.path.join(base_temp_dir, f"WeChat_{timestamp}")
+            shutil.copytree(wechat_dir, temp_dir)
+            temp_wechat_path = os.path.join(temp_dir, os.path.basename(wechat_path))
+
+            # 启动微信（从新目录）
+            process = subprocess.Popen([temp_wechat_path])
             self.wechat_processes.append(process)
 
             messagebox.showinfo("成功", "微信启动中，请稍等...")
