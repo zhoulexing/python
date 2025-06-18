@@ -5,3 +5,5 @@ numpy
 pillow
 torch
 matplotlib
+requests
+python-dotenv
