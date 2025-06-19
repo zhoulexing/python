@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
 from PIL import Image
+import easyocr
 
+ocr_reader = easyocr.Reader(['ch_sim', 'en'])
 
 class ImageUtils:
     def __init__(self):
@@ -96,10 +98,16 @@ class ImageUtils:
             "diffPercentage": float(diff_percentage),
             "totalPixels": int(total_pixels)
         }
+        
+    def image_ocr(self, image_path):
+        result = ocr_reader.readtext(image_path, detail=0)
+        return '\n'.join(result)
 
 
 if __name__ == "__main__":
     image_utils = ImageUtils()
-    result = image_utils.image_matcher(
-        'assets/images/wechat/current_screenshot_white.png', 'assets/images/wechat/moment_step_1.png')
+    # result = image_utils.image_matcher(
+    #     'assets/images/wechat/current_screenshot_white.png', 'assets/images/wechat/moment_step_1.png')
+    # print(result)
+    result = image_utils.image_ocr('assets/images/wechat/current_wechat_screenshot.png')
     print(result)
