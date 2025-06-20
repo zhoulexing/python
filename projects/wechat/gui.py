@@ -16,6 +16,8 @@ class WeChatGui:
         self.wechat_rect = None
         self.moment_window = None
         self.moment_rect = None
+        self.multi_chat_window = None
+        self.multi_chat_rect = None
 
     def open_wechat(self):
         """打开微信应用"""
@@ -44,6 +46,30 @@ class WeChatGui:
 
         except Exception as e:
             print(f"启动微信失败: {e}")
+            return False
+        
+    def start_multi_chat(self):
+        """启动多聊"""
+        try:
+            # 尝试通过常见路径启动
+            multi_chat_paths = [
+                r"C:\Users\zhoulexing\AppData\Roaming\jinzhousoft\JZWeChatTool.exe"
+            ]
+
+            for path in multi_chat_paths:
+                try:
+                    subprocess.Popen(path)
+                    print(f"多聊启动成功: {path}")
+                    time.sleep(3)  # 等待多聊启动
+                    return True
+                except FileNotFoundError:
+                    continue
+
+            time.sleep(3)
+            return True
+
+        except Exception as e:
+            print(f"启动多聊失败: {e}")
             return False
 
     def click_by_image(self, image_path, template_image_path, threshold=0.7, relative=True, rect=None):
@@ -96,12 +122,28 @@ class WeChatGui:
         else:
             print("未找到朋友圈窗口，无法置于前台")
             return False
+    
+    def find_multi_chat_window(self):
+        """查找多聊窗口"""
+        def enum_windows_callback(hwnd, windows):
+            if win32gui.IsWindowVisible(hwnd):
+                window_title = win32gui.GetWindowText(hwnd)
+                if "金舟多聊" in window_title or "金舟多聊子窗体" not in window_title:
+                    windows.append((hwnd, window_title))
 
+        windows = []
+        win32gui.EnumWindows(enum_windows_callback, windows)
+
+        if windows:
+            self.multi_chat_window = windows[0][0]  # 取第一个多聊窗口
+            self.multi_chat_rect = win32gui.GetWindowRect(self.multi_chat_window)
+            
     def find_wechat_window(self):
         """查找微信窗口"""
         def enum_windows_callback(hwnd, windows):
             if win32gui.IsWindowVisible(hwnd):
-                window_title = win32gui.GetWindowText(hwnd)
+                window_title = win32gui.GetWin
+                dowText(hwnd)
                 if "微信" in window_title or "WeChat" in window_title:
                     windows.append((hwnd, window_title))
 
@@ -116,6 +158,21 @@ class WeChatGui:
             return True
         else:
             print("未找到微信窗口")
+            return False
+        
+    def bring_multi_chat_window_to_front(self):
+        """将多聊窗口置于前台"""
+        if self.multi_chat_window:
+            try:
+                win32gui.ShowWindow(self.multi_chat_window, win32con.SW_RESTORE)
+                win32gui.SetForegroundWindow(self.multi_chat_window)
+                time.sleep(0.5)
+                return True
+            except Exception as e:
+                print(f"置于前台失败: {e}")
+                return False
+        else:
+            print("未找到多聊窗口，无法置于前台")
             return False
 
     def bring_wechat_to_front(self):
@@ -213,6 +270,18 @@ class WeChatGui:
         except Exception as e:
             print(f"点击失败: {e}")
             return False
+        
+    def get_multi_chat_info(self):
+        """获取多聊窗口信息"""
+        if self.multi_chat_window and self.multi_chat_rect:
+            left, top, right, bottom = self.multi_chat_rect
+            return {
+                "window_handle": self.multi_chat_window,
+                "position": (left, top),
+                "size": (right - left, bottom - top),
+                "rect": self.multi_chat_rect
+            }
+        return None
 
     def get_wechat_info(self):
         """获取微信窗口信息"""

@@ -438,7 +438,11 @@ def get_core_db(wx_path: str, db_types: list = None) -> [dict]:
 
 if __name__ == '__main__':
     import json
-    with open('WX_OFFS.json', 'r', encoding='utf-8') as f:
+    # 获取当前文件所在目录
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # 构建WX_OFFS.json的完整路径
+    wx_offs_full_path = os.path.join(current_dir, 'WX_OFFS.json')
+    with open(wx_offs_full_path, 'r', encoding='utf-8') as f:
         WX_OFFS = json.load(f)
 
     get_wx_info(WX_OFFS, is_print=True)
