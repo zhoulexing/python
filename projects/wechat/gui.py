@@ -137,7 +137,13 @@ class WeChatGui:
         if windows:
             self.multi_chat_window = windows[0][0]  # 取第一个多聊窗口
             self.multi_chat_rect = win32gui.GetWindowRect(self.multi_chat_window)
-            
+            print(f"找到多聊窗口: {windows[0][0]}")
+            print(f"窗口位置: {self.multi_chat_rect}")
+            return True
+        else:
+            print("未找到多聊窗口")
+            return False
+        
     def find_wechat_window(self):
         """查找微信窗口"""
         def enum_windows_callback(hwnd, windows):
@@ -153,7 +159,7 @@ class WeChatGui:
         if windows:
             self.wechat_window = windows[0][0]  # 取第一个微信窗口
             self.wechat_rect = win32gui.GetWindowRect(self.wechat_window)
-            print(f"找到微信窗口: {windows[0][1]}")
+            print(f"找到微信窗口: {windows[0][0]}")
             print(f"窗口位置: {self.wechat_rect}")
             return True
         else:

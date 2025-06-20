@@ -13,7 +13,7 @@ class WeChat:
     def __init__(self):
         self.type = WeChatType.MULTI_CHAT
         self.wechat_gui = WeChatGui()
-    
+
     def start(self):
         if self.type == WeChatType.MULTI_CHAT:
             print("正在打开多聊...")
@@ -27,15 +27,18 @@ class WeChat:
             if not self.wechat_gui.find_multi_chat_window():
                 print("未找到微信窗口，请确保微信已启动")
                 return
-            
+
             # 3. 将多聊窗口置于前台，并等待加载
             self.wechat_gui.bring_multi_chat_window_to_front()
-            
+
             # 4. 截取多聊截图
             self.wechat_gui.screenshot_by_rect(
                 "assets/images/wechat/current_multi_chat_screenshot.png",
                 self.wechat_gui.multi_chat_rect
             )
+            # 5. 进入朋友圈
+            self.wechat_gui.click_by_image("assets/images/wechat/current_multi_chat_screenshot.png",
+                                           "assets/images/wechat/moment_step_1.png", 0.7, relative=True, rect=self.wechat_gui.multi_chat_rect)
         else:
             # 1. 打开微信
             print("正在打开微信...")
@@ -61,10 +64,10 @@ class WeChat:
             )
             if not screenshot:
                 print("截图失败")
+            # 5. 进入朋友圈
+            self.wechat_gui.click_by_image("assets/images/wechat/current_wechat_screenshot.png",
+                                           "assets/images/wechat/moment_step_1.png", 0.7, relative=True, rect=self.wechat_gui.wechat_rect)
 
-        # 5. 进入朋友圈
-        self.wechat_gui.click_by_image("assets/images/wechat/current_wechat_screenshot.png",
-                                       "assets/images/wechat/moment_step_1.png", 0.7, relative=True, rect=self.wechat_gui.wechat_rect)
         # 6. 查找朋友圈窗口
         self.wechat_gui.find_moment_window()
         # 7. 将朋友圈窗口置于前台，并等待加载
