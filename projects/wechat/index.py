@@ -18,7 +18,7 @@ class WeChat:
         if self.type == WeChatType.MULTI_CHAT:
             print("正在打开多聊...")
             # 1. 打开多聊
-            if not self.wechat_gui.start_multi_chat():
+            if not self.wechat_gui.open_multi_chat():
                 print("打开多聊失败")
                 return
 

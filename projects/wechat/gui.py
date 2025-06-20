@@ -48,12 +48,12 @@ class WeChatGui:
             print(f"启动微信失败: {e}")
             return False
         
-    def start_multi_chat(self):
+    def open_multi_chat(self):
         """启动多聊"""
         try:
             # 尝试通过常见路径启动
             multi_chat_paths = [
-                r"C:\Users\zhoulexing\AppData\Roaming\jinzhousoft\JZWeChatTool.exe"
+                r"C:\Users\zhoulexing\AppData\Roaming\jinzhousoft\JZWeChatTool\JZWeChatTool.exe"
             ]
 
             for path in multi_chat_paths:
@@ -65,7 +65,6 @@ class WeChatGui:
                 except FileNotFoundError:
                     continue
 
-            time.sleep(3)
             return True
 
         except Exception as e:
@@ -137,7 +136,7 @@ class WeChatGui:
         if windows:
             self.multi_chat_window = windows[0][0]  # 取第一个多聊窗口
             self.multi_chat_rect = win32gui.GetWindowRect(self.multi_chat_window)
-            print(f"找到多聊窗口: {windows[0][0]}")
+            print(f"找到多聊窗口: {windows[0][1]}")
             print(f"窗口位置: {self.multi_chat_rect}")
             return True
         else:
