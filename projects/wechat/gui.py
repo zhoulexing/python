@@ -18,6 +18,7 @@ class WeChatGui:
         self.moment_rect = None
         self.multi_chat_window = None
         self.multi_chat_rect = None
+        self.multi_chat_children_windows = []
 
     def open_wechat(self):
         """打开微信应用"""
@@ -83,8 +84,28 @@ class WeChatGui:
             width = result[0]['width']
             height = result[0]['height']
             print(f"图片的坐标: ({x}, {y}, {width}, {height})")
-            self.click_at_coordinate(
+            return self.click_at_coordinate(
                 int(x + width / 2), int(y + height / 2), relative, rect=rect)
+            
+    def click_multi_chat_by_index(self, index):
+        """根据索引点击多聊"""
+        result = image_utils.image_matcher(
+            "assets/images/wechat/current_multi_chat_screenshot.png",
+            "assets/images/wechat/multi_chat_split_btn.png", 
+            0.7,
+        )
+        if len(result) == 0:
+            raise Exception("未找到分割按钮")
+        else:
+            x = result[0]['x']
+            y = result[0]['y']
+            width = result[0]['width']
+            height = result[0]['height']
+            print(f"分割按钮位置: ({x}, {y}, {width}, {height})")
+            final_y = y + height + 18 + (index * 154) - 154/2
+            return self.click_at_coordinate(
+                int(x + width / 2), int(final_y), True, rect=self.multi_chat_rect)
+            
 
     def find_moment_window(self):
         """查找朋友圈窗口"""
@@ -127,8 +148,10 @@ class WeChatGui:
         def enum_windows_callback(hwnd, windows):
             if win32gui.IsWindowVisible(hwnd):
                 window_title = win32gui.GetWindowText(hwnd)
-                if "金舟多聊" in window_title or "金舟多聊子窗体" not in window_title:
+                if "金舟多聊" == window_title:
                     windows.append((hwnd, window_title))
+                if "金舟多聊子窗体" in window_title:
+                    self.multi_chat_children_windows.append((hwnd, window_title))
 
         windows = []
         win32gui.EnumWindows(enum_windows_callback, windows)
@@ -147,8 +170,7 @@ class WeChatGui:
         """查找微信窗口"""
         def enum_windows_callback(hwnd, windows):
             if win32gui.IsWindowVisible(hwnd):
-                window_title = win32gui.GetWin
-                dowText(hwnd)
+                window_title = win32gui.GetWindowText(hwnd)
                 if "微信" in window_title or "WeChat" in window_title:
                     windows.append((hwnd, window_title))
 
