@@ -2,9 +2,6 @@ from .gui import WeChatGui
 import time
 import pyautogui
 import os
-from utils.image import ImageUtils
-
-image_utils = ImageUtils()
 
 
 class WeChatType:

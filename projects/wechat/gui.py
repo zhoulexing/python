@@ -102,7 +102,7 @@ class WeChatGui:
             width = result[0]['width']
             height = result[0]['height']
             print(f"分割按钮位置: ({x}, {y}, {width}, {height})")
-            final_y = y + height + 18 + (index * 154) - 154/2
+            final_y = y + height + 18 + (index * 154) + 154/2
             return self.click_at_coordinate(
                 int(x + width / 2), int(final_y), True, rect=self.multi_chat_rect)
             
