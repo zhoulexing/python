@@ -93,6 +93,11 @@ class WeChatDecrypt:
             config.set("wx_msg_db_index", msgs[-1]['id'])
         return json.dumps(msgs), json.dumps(users)
 
+    def find_new_msgs_of_robot(self):
+        self.all_merge_real_time_db()
+        user = self.get_user_by_nickname("火麒麟")
+        msgs = self.get_msg_by_wxid(user['wxid'])
+        print(f"msgs: {msgs}")
 
 if __name__ == "__main__":
     wechat_decrypt = WeChatDecrypt()
@@ -101,6 +106,6 @@ if __name__ == "__main__":
     # user = wechat_decrypt.get_user_by_nickname("火麒麟")
     # msgs, users = wechat_decrypt.get_msg_by_wxid(user['wxid'])
     
-    wechat_decrypt.decrypt_msg()
+    wechat_decrypt.find_new_msgs_of_robot()
 
     # wechat_decrypt.all_merge_real_time_db()

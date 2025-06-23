@@ -38,3 +38,8 @@ class SqliteUtils:
             return result
         finally:
             conn.close()
+
+
+if __name__ == "__main__":
+    sqlite_utils = SqliteUtils()
+    print(sqlite_utils.read_table("assets/wx_db/msg.db", "MSG"))
