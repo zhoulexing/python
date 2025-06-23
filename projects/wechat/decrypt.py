@@ -44,7 +44,8 @@ class WeChatDecrypt:
             raise Exception("[-] 获取数据库路径失败")
         print(f"wxdbpaths: {wxdbpaths[0]}")
         print(f"key: {self.wx_info['key']}")
-        success = decrypt(self.wx_info['key'], wxdbpaths[0]['db_path'], self.msg_db_file)
+        success, list = decrypt(self.wx_info['key'], wxdbpaths[0]['db_path'], self.msg_db_file)
+        print(f"list: {list}")
         if not success:
             raise Exception("[-] 解密失败, 请检查key是否正确")
 
@@ -68,7 +69,6 @@ class WeChatDecrypt:
         }
         db = DBHandler(db_config, self.wx_info['wxid'])
         ret = db.get_session_list()
-        print(f"ret.values(): {ret.values()}")
         return ret.values()
 
     def get_user_by_nickname(self, nickname):
@@ -96,7 +96,7 @@ class WeChatDecrypt:
     def find_new_msgs_of_robot(self):
         self.all_merge_real_time_db()
         user = self.get_user_by_nickname("火麒麟")
-        msgs = self.get_msg_by_wxid(user['wxid'])
+        msgs, users = self.get_msg_by_wxid(user['wxid'])
         print(f"msgs: {msgs}")
 
 if __name__ == "__main__":
