@@ -3,7 +3,7 @@ import json
 
 
 class Config:
-    def __init__(self, config_path):
+    def __init__(self, config_path = None):
         if not config_path:
             config_path = os.path.join(os.path.dirname(__file__), "../assets/json/config.json")
             
@@ -24,3 +24,7 @@ class Config:
     def save_config(self):
         with open(self.config_path, "w") as f:
             json.dump(self.config, f, ensure_ascii=False, indent=4)
+
+if __name__ == "__main__":
+    config = Config()
+    print(config.get("wxinfo"))

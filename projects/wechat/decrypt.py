@@ -42,7 +42,9 @@ class WeChatDecrypt:
         success, wxdbpaths = get_core_db(self.wx_info['wx_dir'], ["MSG"])
         if not success:
             raise Exception("[-] 获取数据库路径失败")
-        success = decrypt(self.wx_info['key'], wxdbpaths[0], self.msg_db_file)
+        print(f"wxdbpaths: {wxdbpaths[0]}")
+        print(f"key: {self.wx_info['key']}")
+        success = decrypt(self.wx_info['key'], wxdbpaths[0]['db_path'], self.msg_db_file)
         if not success:
             raise Exception("[-] 解密失败, 请检查key是否正确")
 
@@ -96,17 +98,9 @@ if __name__ == "__main__":
     wechat_decrypt = WeChatDecrypt()
 
     # wx_helper_core.decrypt_merge()
-    user = wechat_decrypt.get_user_by_nickname("火麒麟")
-    msgs, users = wechat_decrypt.get_msg_by_wxid(user['wxid'])
+    # user = wechat_decrypt.get_user_by_nickname("火麒麟")
+    # msgs, users = wechat_decrypt.get_msg_by_wxid(user['wxid'])
     
-    # 确保assets/json目录存在
-    os.makedirs("assets/json", exist_ok=True)
-    
-    # 将消息写入JSON文件
-    with open("assets/json/火麒麟.json", "w", encoding="utf-8") as f:
-        f.write(msgs)
-    
-    print(f"消息已保存到 assets/json/火麒麟.json")
-    
+    wechat_decrypt.decrypt_msg()
 
     # wechat_decrypt.all_merge_real_time_db()
