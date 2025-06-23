@@ -4,6 +4,7 @@ import os
 import random
 import string
 import json
+from datetime import datetime, timedelta
 
 
 class WeChatDecrypt:
@@ -83,7 +84,10 @@ class WeChatDecrypt:
         }
 
         db = DBHandler(db_config, self.wx_info['wxid'])
-        msgs, users = db.get_msgs(wxids=wxid, start_index=0, page_size=1000)
+
+        start_createtime = datetime.now() - timedelta(days=1)
+        msgs, users = db.get_msgs(
+            wxids=wxid, start_index=0, page_size=1000, start_createtime=start_createtime, end_createtime=datetime.now())
         return json.dumps(msgs), json.dumps(users)
 
 
@@ -94,6 +98,5 @@ if __name__ == "__main__":
     # user = wechat_decrypt.get_user_by_nickname("火麒麟")
     # msgs, users = wechat_decrypt.get_msg_by_wxid(user['wxid'])
     # print(f"msgs: {msgs}")
-
 
     wechat_decrypt.all_merge_real_time_db()
