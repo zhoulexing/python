@@ -3,6 +3,7 @@ from pywxdump import WX_OFFS, DBHandler
 import os
 import random
 import string
+import json
 
 
 class WxHelperCore:
@@ -75,7 +76,7 @@ class WxHelperCore:
 
         db = DBHandler(db_config, self.wx_info['wxid'])
         msgs, users = db.get_msgs(wxids=wxid, start_index=0, page_size=1000)
-        return msgs, users
+        return json.dumps(msgs), json.dumps(users)
 
 
 if __name__ == "__main__":
@@ -84,6 +85,4 @@ if __name__ == "__main__":
     # wx_helper_core.decrypt_merge()
     user = wx_helper_core.get_user_by_nickname("火麒麟")
     msgs, users = wx_helper_core.get_msg_by_wxid(user['wxid'])
-    print(msgs)
-    print(users)
-
+    print(f"msgs: {msgs}")
