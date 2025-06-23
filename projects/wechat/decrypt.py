@@ -1,30 +1,21 @@
-from pywxdump import get_wx_info, decrypt_merge, all_merge_real_time_db
+from pywxdump import get_wx_info, decrypt_merge, all_merge_real_time_db, get_core_db, decrypt
 from pywxdump import WX_OFFS, DBHandler
 import os
 import random
 import string
 import json
 from datetime import datetime, timedelta
+from utils.config import Config
 
+config = Config()
 
 class WeChatDecrypt:
     def __init__(self):
-        # self.wx_info = self.get_wx_info()
-        # print(f"wx_info: {self.wx_info}")
-        self.wx_info = {
-            'pid': 14736,
-            'version': '3.9.10.27',
-            'account': 'Youzan-timi',
-            'mobile': '13282826803',
-            'nickname': 'kimi',
-            'mail': None,
-            'wxid': 'wxid_mnrojdr78dhf12',
-            'key': '701b14190ca54f76ba86deef6b308d9e68fd9d8a01134e90b656ed4b3a9348f5',
-            'wx_dir': 'C:\\WeChat Files\\wxid_mnrojdr78dhf12'
-        }
-        # self.merge_save_path = None
-        self.merge_save_path = os.path.join(
+        self.wx_info = config.get("wxinfo")
+        self.merge_db_file = os.path.join(
             os.path.dirname(__file__), "../../assets/wx_db/merge_1750666183.db")
+        self.msg_db_file = os.path.join(
+            os.path.dirname(__file__), "../../assets/wx_db/msg.db")
 
     def random_str(self, num=16):
         return ''.join(random.sample(string.ascii_letters + string.digits, num))
@@ -32,6 +23,7 @@ class WeChatDecrypt:
     def get_wx_info(self):
         wx_infos = get_wx_info(WX_OFFS)
         if len(wx_infos) > 0:
+            config.set("wxinfo", json.dumps(wx_infos[0]))
             return wx_infos[0]
         raise Exception("[-] 未找到微信信息, 请重新登录")
 
@@ -39,15 +31,23 @@ class WeChatDecrypt:
         output_path = os.path.join(
             os.path.dirname(__file__), "../../assets/wx_db")
 
-        success, merge_save_path = decrypt_merge(
+        success, merge_db_file = decrypt_merge(
             self.wx_info['wx_dir'], self.wx_info['key'], output_path)
-        print(f"decrypt_merge_result: {success}, {merge_save_path}")
+        print(f"decrypt_merge_result: {success}, {merge_db_file}")
         if not success:
             raise Exception("[-] 解密失败, 请检查key是否正确")
-        self.merge_save_path = merge_save_path
+        self.merge_db_file = merge_db_file
+        
+    def decrypt_msg(self):
+        success, wxdbpaths = get_core_db(self.wx_info['wx_dir'], ["MSG"])
+        if not success:
+            raise Exception("[-] 获取数据库路径失败")
+        success = decrypt(self.wx_info['key'], wxdbpaths[0], self.msg_db_file)
+        if not success:
+            raise Exception("[-] 解密失败, 请检查key是否正确")
 
     def all_merge_real_time_db(self):
-        code, ret = all_merge_real_time_db(key=self.wx_info['key'], wx_path=self.wx_info['wx_dir'], merge_path=self.merge_save_path,
+        code, ret = all_merge_real_time_db(key=self.wx_info['key'], wx_path=self.wx_info['wx_dir'], merge_path=self.merge_db_file,
                                            real_time_exe_path=None)
         print(f"all_merge_real_time_db_result: {code}, {ret}")
         if not code:
@@ -55,14 +55,14 @@ class WeChatDecrypt:
         return ret
 
     def get_all_user(self):
-        if not os.path.exists(self.merge_save_path):
-            print(f"[-] 错误: 数据库文件不存在 {self.merge_save_path}")
+        if not os.path.exists(self.merge_db_file):
+            print(f"[-] 错误: 数据库文件不存在 {self.merge_db_file}")
             return
 
         db_config = {
             "key": self.random_str(16),
             "type": "sqlite",
-            "path": self.merge_save_path
+            "path": self.merge_db_file
         }
         db = DBHandler(db_config, self.wx_info['wxid'])
         ret = db.get_session_list()
@@ -80,14 +80,15 @@ class WeChatDecrypt:
         db_config = {
             "key": self.random_str(16),
             "type": "sqlite",
-            "path": self.merge_save_path
+            "path": self.merge_db_file
         }
 
         db = DBHandler(db_config, self.wx_info['wxid'])
-
-        start_createtime = datetime.now() - timedelta(days=1)
+        start_index = int(config.get("wx_msg_db_index"))
         msgs, users = db.get_msgs(
-            wxids=wxid, start_index=0, page_size=1000, start_createtime="2025-06-22 00:00:00", end_createtime=datetime.now())
+            wxids=wxid, start_index=start_index, page_size=100)
+        if len(msgs) > 0:
+            config.set("wx_msg_db_index", msgs[-1]['id'])
         return json.dumps(msgs), json.dumps(users)
 
 
