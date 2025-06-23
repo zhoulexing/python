@@ -20,7 +20,9 @@ class WxHelperCore:
             'key': '701b14190ca54f76ba86deef6b308d9e68fd9d8a01134e90b656ed4b3a9348f5', 
             'wx_dir': 'C:\\WeChat Files\\wxid_mnrojdr78dhf12'
         }
-        self.merge_save_path = None
+        # self.merge_save_path = None
+        self.merge_save_path = os.path.join(
+            os.path.dirname(__file__), "../assets/wx_db/merge_1750666183.db")
 
     def random_str(self, num=16):
         return ''.join(random.sample(string.ascii_letters + string.digits, num))
@@ -43,14 +45,14 @@ class WxHelperCore:
         self.merge_save_path = merge_save_path
 
     def get_all_user(self):
-        if not os.path.exists(self.merge_db_path):
-            print(f"[-] 错误: 数据库文件不存在 {self.merge_db_path}")
+        if not os.path.exists(self.merge_save_path):
+            print(f"[-] 错误: 数据库文件不存在 {self.merge_save_path}")
             return
 
         db_config = {
             "key": self.random_str(16),
             "type": "sqlite",
-            "path": self.merge_db_path
+            "path": self.merge_save_path
         }
         db = DBHandler(db_config, self.wx_info['wxid'])
         ret = db.get_session_list()
@@ -68,7 +70,7 @@ class WxHelperCore:
         db_config = {
             "key": self.random_str(16),
             "type": "sqlite",
-            "path": self.merge_db_path
+            "path": self.merge_save_path
         }
 
         db = DBHandler(db_config, self.wx_info['wxid'])
@@ -79,7 +81,7 @@ class WxHelperCore:
 if __name__ == "__main__":
     wx_helper_core = WxHelperCore()
     
-    wx_helper_core.decrypt_merge()
+    # wx_helper_core.decrypt_merge()
     user = wx_helper_core.get_user_by_nickname("火麒麟")
     msgs, users = wx_helper_core.get_msg_by_wxid(user['wxid'])
     print(msgs)
