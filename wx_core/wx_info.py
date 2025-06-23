@@ -10,14 +10,12 @@ import json
 import os
 import re
 import winreg
-import ctypes.wintypes as wintypes
-
 from typing import List, Union
 from .utils import verify_key, get_exe_bit, wx_core_error
 from .utils import get_process_list, get_memory_maps, get_process_exe_path, get_file_version_info
 from .utils import search_memory
 from .utils import wx_core_loger, CORE_DB_TYPE
-
+import ctypes.wintypes as wintypes
 
 # 定义常量
 PROCESS_QUERY_INFORMATION = 0x0400
@@ -209,7 +207,7 @@ def get_key_by_mem_search(pid, db_path, addr_len):
 
     memory_maps = get_memory_maps(pid)
     for module in memory_maps:
-        if module.FileName and 'Weixin.dll' in module.FileName:
+        if module.FileName and 'WeChatWin.dll' in module.FileName:
             s = module.BaseAddress
             e = module.BaseAddress + module.RegionSize
             start_adress = s if s < start_adress else start_adress
@@ -278,7 +276,7 @@ def get_info_details(pid, WX_OFFS: dict = None):
             wechat_base_address = 0
             memory_maps = get_memory_maps(pid)
             for module in memory_maps:
-                if module.FileName and 'Weixin.dll' in module.FileName:
+                if module.FileName and 'WeChatWin.dll' in module.FileName:
                     wechat_base_address = module.BaseAddress
                     rd['version'] = get_file_version_info(module.FileName) if os.path.exists(module.FileName) else rd[
                         'version']
@@ -297,7 +295,7 @@ def get_info_details(pid, WX_OFFS: dict = None):
                 rd['mail'] = get_info_string(Handle, mail_baseaddr, 64) if bias_list[3] != 0 else None
                 rd['key'] = get_key_by_offs(Handle, key_baseaddr, addrLen) if bias_list[4] != 0 else None
             else:
-                wx_core_loger.warning(f"[-] Weixin Weixin.dll Not Found")
+                wx_core_loger.warning(f"[-] WeChat WeChatWin.dll Not Found")
 
         rd['wxid'] = get_info_wxid(Handle)
         rd['wx_dir'] = get_wx_dir(rd['wxid'], Handle)
@@ -305,7 +303,7 @@ def get_info_details(pid, WX_OFFS: dict = None):
 
         CloseHandle(Handle)
     except Exception as e:
-        wx_core_loger.error(f"[-] Weixin Get Info Error:{e}", exc_info=True)
+        wx_core_loger.error(f"[-] WeChat Get Info Error:{e}", exc_info=True)
     return rd
 
 
@@ -329,11 +327,11 @@ def get_wx_info(WX_OFFS: dict = None, is_print: bool = False, save_path: str = N
 
     processes = get_process_list()
     for pid, name in processes:
-        if name == "Weixin.exe":
+        if name == "WeChat.exe":
             wechat_pids.append(pid)
 
     if len(wechat_pids) <= 0:
-        wx_core_loger.error("[-] Weixin No Run")
+        wx_core_loger.error("[-] WeChat No Run")
         return result
 
     for pid in wechat_pids:

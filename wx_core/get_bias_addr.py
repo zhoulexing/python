@@ -44,8 +44,8 @@ class BiasAddr:
         self.key = bytes.fromhex(key) if key else b""
         self.db_path = db_path if db_path and os.path.exists(db_path) else ""
 
-        self.process_name = "Weixin.exe"
-        self.module_name = "Weixin.dll"
+        self.process_name = "WeChat.exe"
+        self.module_name = "WeChatWin.dll"
 
         self.pm = None  # Pymem 对象
         self.is_WoW64 = None  # True: 32位进程运行在64位系统上 False: 64位进程运行在64位系统上
@@ -77,7 +77,7 @@ class BiasAddr:
         except pymem.exception.ProcessNotFound:
             return False, "[-] WeChat No Run"
 
-    def search_memory_value(self, value: bytes, module_name="Weixin.dll"):
+    def search_memory_value(self, value: bytes, module_name="WeChatWin.dll"):
         start_adress = 0x7FFFFFFFFFFFFFFF
         end_adress = 0
 
@@ -155,7 +155,7 @@ class BiasAddr:
         phone_type3 = "ipad\x00"
 
         pm = pymem.Pymem(self.pid)
-        module_name = "Weixin.dll"
+        module_name = "WeChatWin.dll"
 
         MicroMsg_path = os.path.join(db_path, "MSG", "MicroMsg.db")
 

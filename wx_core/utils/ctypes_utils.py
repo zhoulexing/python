@@ -250,13 +250,13 @@ def get_process_list():
 if __name__ == "__main__":
     processes = get_process_list()
     for pid, name in processes:
-        if name == "Weixin.exe":
-            print(f"PID: {pid}, Process Name: {name}")
+        if name == "WeChat.exe":
+            # print(f"PID: {pid}, Process Name: {name}, Exe Path: {path}")
             # Handle = ctypes.windll.kernel32.OpenProcess(0x1F0FFF, False, pid)
             # wechat_base_address = 0
             memory_maps = get_memory_maps(pid)
             for module in memory_maps:
-                if module.FileName and 'Weixin.dll' in module.FileName:
+                if module.FileName and 'WeChatWin.dll' in module.FileName:
                     print(module.BaseAddress)
                     print(module.FileName)
                     break
