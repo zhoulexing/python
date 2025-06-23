@@ -1,143 +1,87 @@
 from pywxdump import get_wx_info, decrypt_merge
 from pywxdump import WX_OFFS, DBHandler
 import os
-import time
-import json
+import random
+import string
 
 
 class WxHelperCore:
     def __init__(self):
-        self.wx_info = get_wx_info(WX_OFFS)
-        print(f"wx_info: {self.wx_info}")
+        # self.wx_info = self.get_wx_info()
+        # print(f"wx_info: {self.wx_info}")
+        self.wx_info = {
+            'pid': 14736, 
+            'version': '3.9.10.27', 
+            'account': 'Youzan-timi', 
+            'mobile': '13282826803', 
+            'nickname': 'kimi', 
+            'mail': None,
+            'wxid': 'wxid_mnrojdr78dhf12', 
+            'key': '701b14190ca54f76ba86deef6b308d9e68fd9d8a01134e90b656ed4b3a9348f5', 
+            'wx_dir': 'C:\\WeChat Files\\wxid_mnrojdr78dhf12'
+        }
+        self.merge_save_path = None
+
+    def random_str(self, num=16):
+        return ''.join(random.sample(string.ascii_letters + string.digits, num))
+
+    def get_wx_info(self):
+        wx_infos = get_wx_info(WX_OFFS)
+        if len(wx_infos) > 0:
+            return wx_infos[0]
+        raise Exception("[-] 未找到微信信息, 请重新登录")
+
+    def decrypt_merge(self):
         output_path = os.path.join(
-            os.path.dirname(__file__), "assets", "wx_db")
-        code, merge_save_path = decrypt_merge(
-            self.wx_info[0]['wx_dir'], self.wx_info[0]['key'], output_path)
-        print(f"decrypt_merge_result: {code}, {merge_save_path}")
+            os.path.dirname(__file__), "../assets/wx_db")
+        
+        success, merge_save_path = decrypt_merge(
+            self.wx_info['wx_dir'], self.wx_info['key'], output_path)
+        print(f"decrypt_merge_result: {success}, {merge_save_path}")
+        if not success:
+            raise Exception("[-] 解密失败, 请检查key是否正确")
         self.merge_save_path = merge_save_path
 
-    def find_wxid_from_merged_db(self, nickname=None, remark=None):
-        """
-        在合并后的数据库中根据昵称或备注查找用户的 wxid。
-
-        :param db_path: 已解密并合并的数据库文件路径 (e.g., merge_all.db)。
-        :param nickname: 要搜索的联系人昵称 (可选)。
-        :param remark: 要搜索的联系人备注 (可选)。
-        """
-        db_path = os.path.join(
-            os.path.dirname(__file__), "assets", "wx_db", "merge_1750660380.db")
-        if not os.path.exists(db_path):
-            print(f"[-] 错误: 数据库文件不存在 {db_path}")
+    def get_all_user(self):
+        if not os.path.exists(self.merge_db_path):
+            print(f"[-] 错误: 数据库文件不存在 {self.merge_db_path}")
             return
 
-        if not nickname and not remark:
-            print("[-] 错误: 请至少提供一个搜索条件 (昵称或备注)。")
-            return
-
-        # 合并后的数据库包含了Contact表，所以我们可以直接使用MicroHandler
         db_config = {
-            "key": "701b14190ca54f76ba86deef6b308d9e68fd9d8a01134e90b656ed4b3a9348f5",  # 对于已解密的数据库，key内容不敏感
+            "key": self.random_str(16),
             "type": "sqlite",
-            "path": db_path
+            "path": self.merge_db_path
         }
+        db = DBHandler(db_config, self.wx_info['wxid'])
+        ret = db.get_session_list()
+        print(f"ret.values(): {ret.values()}")
+        return ret.values()
 
-        try:
-            db = DBHandler(db_config, "wxid_mnrojdr78dhf12")
-            ret = db.get_session_list()
-            print(f"ret.values(): {ret.values()}")
+    def get_user_by_nickname(self, nickname):
+        users = self.get_all_user()
+        for user in users:
+            if user.get("strNickName") == nickname:
+                return user
+        return None
 
-        except Exception as e:
-            print(f"[-] 查询时发生错误: {e}")
-
-    def export_chat_history_to_json(self, contact_wxid, start_time_str, end_time_str, output_path):
-        """
-        导出指定联系人在指定时间段内的聊天记录为JSON文件。
-
-        :param merge_db_path: 合并后的数据库文件路径 (merge_all.db)
-        :param contact_wxid: 联系人的wxid
-        :param start_time_str: 开始时间，格式为 "YYYY-MM-DD HH:MM:SS"
-        :param end_time_str: 结束时间，格式为 "YYYY-MM-DD HH:MM:SS"
-        :param output_path: JSON文件输出路径
-        """
-        if not os.path.exists(self.merge_save_path):
-            print(f"[-] 错误: 数据库文件不存在 {self.merge_save_path}")
-            return
-
-        # 将时间字符串转换为时间戳
-        try:
-            start_timestamp = int(time.mktime(
-                time.strptime(start_time_str, "%Y-%m-%d %H:%M:%S")))
-            end_timestamp = int(time.mktime(
-                time.strptime(end_time_str, "%Y-%m-%d %H:%M:%S")))
-        except ValueError:
-            print("[-] 错误: 时间格式不正确，请使用 'YYYY-MM-DD HH:MM:SS'")
-            return
-
-        # 初始化DBHandler
-        # 注意：这里的db_config需要一个唯一的key，但对于已解密的数据库，内容不敏感
+    def get_msg_by_wxid(self, wxid):
         db_config = {
-            "key": self.wx_info[0]['key'],
+            "key": self.random_str(16),
             "type": "sqlite",
-            "path": self.merge_save_path
-        }
-        db_handler = DBHandler(db_config)
-
-        # 获取总消息数以进行分页
-        msg_counts = db_handler.get_m_msg_count(contact_wxid)
-        total_msgs = msg_counts.get(contact_wxid, 0)
-        if total_msgs == 0:
-            print(f"[-] wxid为'{contact_wxid}'的联系人没有聊天记录。")
-            return
-
-        print(f"[+] 正在获取 {contact_wxid} 的聊天记录，共约 {total_msgs} 条...")
-
-        # 使用get_msg_list并传入时间戳
-        # 设置一个足够大的page_size来获取所有消息
-        all_messages, users = db_handler.get_msg_list(
-            wxids=contact_wxid,
-            start_index=0,
-            page_size=total_msgs,  # 一次性获取所有消息
-            start_createtime=start_timestamp,
-            end_createtime=end_timestamp
-        )
-
-        if not all_messages:
-            print(f"[-] 在指定时间范围内没有找到与 {contact_wxid} 的聊天记录。")
-            return
-
-        # 准备要导出的数据
-        export_data = {
-            "contact_wxid": contact_wxid,
-            "time_range": {
-                "start": start_time_str,
-                "end": end_time_str
-            },
-            "message_count": len(all_messages),
-            "messages": all_messages,
-            "related_users": users
+            "path": self.merge_db_path
         }
 
-        # 导出到JSON文件
-        try:
-            with open(output_path, 'w', encoding='utf-8') as f:
-                json.dump(export_data, f, ensure_ascii=False, indent=4)
-            print(f"[+] 成功将 {len(all_messages)} 条聊天记录导出到 {output_path}")
-        except IOError as e:
-            print(f"[-] 错误: 无法写入文件 {output_path}. 原因: {e}")
+        db = DBHandler(db_config, self.wx_info['wxid'])
+        msgs, users = db.get_msgs(wxids=wxid, start_index=0, page_size=1000)
+        return msgs, users
 
 
 if __name__ == "__main__":
     wx_helper_core = WxHelperCore()
-    # ======== 如何通过昵称查找 wxid ========
-    # 在下方输入你想要查找的昵称
-    wx_helper_core.find_wxid(nickname="文件传输助手")
+    
+    wx_helper_core.decrypt_merge()
+    user = wx_helper_core.get_user_by_nickname("火麒麟")
+    msgs, users = wx_helper_core.get_msg_by_wxid(user['wxid'])
+    print(msgs)
+    print(users)
 
-    # # ======== 如何导出聊天记录 ========
-    # # 1. 先用上面的方法找到wxid
-    # # 2. 在下方填入wxid和时间范围
-    # wx_helper_core.export_chat_history_to_json(
-    #     contact_wxid="filehelper", # 替换为你要导出的联系人wxid
-    #     start_time_str="2024-01-01 00:00:00",
-    #     end_time_str="2024-07-25 23:59:59",
-    #     output_path=os.path.join(os.path.dirname(__file__), "assets", "chat_history_export.json")
-    # )
