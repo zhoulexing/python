@@ -1,4 +1,3 @@
-from pywxdump.db import MicroHandler
 from pywxdump import get_wx_info, decrypt_merge
 from pywxdump import WX_OFFS, DBHandler
 import os
@@ -43,34 +42,9 @@ class WxHelperCore:
         }
 
         try:
-            micro_handler = MicroHandler(db_config)
-
-            # 确认Contact表是否存在
-            if not micro_handler.tables_exist("Contact"):
-                print(
-                    f"[-] 错误: 在数据库 '{os.path.basename(db_path)}' 中未找到 'Contact' 表。")
-                print("    请确保这是一个正确的、已合并的数据库文件。")
-                return
-
-            search_term = nickname if nickname else remark
-            print(
-                f"[+] 正在用关键词 '{search_term}' 在 {os.path.basename(db_path)} 中搜索联系人...")
-
-            # get_user 方法会对昵称和备注进行模糊搜索
-            contacts = micro_handler.get_user(word=search_term)
-
-            if not contacts:
-                print("[-] 没有找到匹配的联系人。")
-                return
-
-            print("\n[+] 找到以下匹配的联系人:")
-            print("-" * 50)
-            for wxid, user_info in contacts.items():
-                print(f"  昵称 (NickName): {user_info.get('NickName', 'N/A')}")
-                print(f"  备注 (Remark):   {user_info.get('Remark', 'N/A')}")
-                print(f"  Wxid (UserName): {user_info.get('UserName', 'N/A')}")
-                print(f"  头像 (Avatar):   {user_info.get('Avatar', 'N/A')}")
-                print("-" * 50)
+            db = DBHandler(db_config, "wxid_mnrojdr78dhf12")
+            ret = db.get_session_list()
+            print(f"ret.values(): {ret.values()}")
 
         except Exception as e:
             print(f"[-] 查询时发生错误: {e}")
