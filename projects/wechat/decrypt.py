@@ -112,7 +112,7 @@ class WeChatDecrypt:
     def listen_robot_msg(self):
         while True:
             self.find_new_msgs_of_robot()
-            time.sleep(5)
+            time.sleep(10)
     
 if __name__ == "__main__":
     wechat_decrypt = WeChatDecrypt()
@@ -121,6 +121,7 @@ if __name__ == "__main__":
     # user = wechat_decrypt.get_user_by_nickname("火麒麟")
     # msgs, users = wechat_decrypt.get_msg_by_wxid(user['wxid'])
     
-    wechat_decrypt.find_new_msgs_of_robot()
+    # wechat_decrypt.find_new_msgs_of_robot()
+    wechat_decrypt.listen_robot_msg()
 
     # wechat_decrypt.all_merge_real_time_db()
