@@ -1,23 +1,27 @@
 {
-    "wxinfo": {
-        "pid": 14736,
-        "version": "3.9.10.27",
-        "account": "Youzan-timi",
-        "mobile": "13282826803",
-        "nickname": "kimi",
-        "mail": null,
-        "wxid": "wxid_mnrojdr78dhf12",
-        "key": "701b14190ca54f76ba86deef6b308d9e68fd9d8a01134e90b656ed4b3a9348f5",
-        "wx_dir": "C:\\WeChat Files\\wxid_mnrojdr78dhf12"
-    },
-    "wx_msg_db_index": 127,
-    "robot_text_msgs_list": [
-        [
-            {
-                "id": 126,
-                "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手\n图片：基于最火的labubu生成2张蛋糕图片",
-                "createTime": "2025-06-24 10:29:53"
-            }
-        ]
-    ]
+  "wxinfo": {
+    "pid": 14736,
+    "version": "3.9.10.27",
+    "account": "Youzan-timi",
+    "mobile": "13282826803",
+    "nickname": "kimi",
+    "mail": null,
+    "wxid": "wxid_mnrojdr78dhf12",
+    "key": "701b14190ca54f76ba86deef6b308d9e68fd9d8a01134e90b656ed4b3a9348f5",
+    "wx_dir": "C:\\WeChat Files\\wxid_mnrojdr78dhf12"
+  },
+  "wx_msg_db_index": 127,
+  "robot_text_msgs_list": [
+    {
+      "id": "123123412341234123",
+      "msg_list": [
+        {
+          "id": 126,
+          "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手\n图片：基于最火的labubu生成2张蛋糕图片",
+          "createTime": "2025-06-24 10:29:53"
+        }
+      ],
+      "ineffective": true
+    }
+  ]
 }

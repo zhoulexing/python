@@ -2,8 +2,8 @@ from .gui import WeChatGui
 import time
 import pyautogui
 import os
-from .decrypt import WeChatDecrypt
-from ai.youzan import Youzan
+from .ai import WeChatAi
+import requests
 
 
 class WeChatType:
@@ -13,22 +13,26 @@ class WeChatType:
 
 class WeChat:
     def __init__(self):
-        self.type = WeChatType.MULTI_CHAT
+        self.type = WeChatType.WECHAT
         self.wechat_gui = WeChatGui()
-        self.wechat_decrypt = WeChatDecrypt()
-        self.youzan = Youzan()
+        self.wechat_ai = WeChatAi()
         self.multi_chat_index = 0
+        self.text = ""
+        self.file_names = []
+        self.ip = "172.18.232.82:5001"
 
     def listen_new_msgs(self):
         while True:
-            msgs = self.wechat_decrypt.find_new_msgs_of_robot()
-            if len(msgs) > 0:
-                msg_text_list = [{"id": item["id"], "content": item["msg"]}
-                                 for item in msgs if item["type_name"] == "文本"]
-                if self.judge_start(msg_text_list):
-                    self.start()
+            msg_item = requests.get(
+                f"http://{self.ip}/wechat/listen_new_msgs")
+            if msg_item:
+                self.text, self.file_names = self.wechat_ai.start(
+                    msg_item["msg_list"])
+                requests.post(f"http://{self.ip}/wechat/set_msg_ineffective", json={
+                    "id": msg_item["id"]
+                })
             time.sleep(5)
-            
+
     def judge_start(self, msg_text_list):
         if len(msg_text_list) > 0:
             return True
@@ -126,10 +130,10 @@ class WeChat:
         self.wechat_gui.click_by_image("assets/images/wechat/current_moment_screenshot.png",
                                        "assets/images/wechat/moment_step_text.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
         time.sleep(0.5)
-        # 11. 输入文字 TODO: 后面换AI来生成
-        pyautogui.typewrite("Hello, World!")
+        # 11. 输入文字
+        pyautogui.typewrite(self.text)
         time.sleep(1)
-        # 12. 输入图片 TODO: 后面换AI来生成
+        # 12. 输入图片
         self.wechat_gui.screenshot_moment(
             "assets/images/wechat/current_moment_screenshot.png"
         )
@@ -138,8 +142,7 @@ class WeChat:
         time.sleep(1)
         image_dir = os.path.join(os.path.dirname(
             __file__), "../../assets/images/wechat")
-        self.wechat_gui.select_images_from_dialog(
-            image_dir, ["moment_step_3.png", "current_screenshot_blank.png"])
+        self.wechat_gui.select_images_from_dialog(image_dir, self.file_names)
 
         # 13. 点击发送按钮
         self.wechat_gui.screenshot_moment(

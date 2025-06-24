@@ -1,6 +1,5 @@
 import requests
 
-
 class YouzanModel:
     def __init__(self):
         self.model = "azure4o"
@@ -15,8 +14,8 @@ class YouzanModel:
         response = requests.post(url, headers=headers, json=data)
         return response.json()
 
-    def chat(self, messages):
-        params = [{
+    def chat(self, messages, tools = None):
+        param = {
             "source": "shared_front",
             "scene": "wechat_helper",
             "n": 1,
@@ -33,13 +32,18 @@ class YouzanModel:
                 }
             },
             "messages": messages,
-        }]
+        }
+        if tools:
+            param["tools"] = tools
+            
         result = self.invoke(
-            "com.youzan.aigc.common.service.api.service.CommonService", "executeWithNativeParams", params)
+            "com.youzan.aigc.common.service.api.service.CommonService", "executeWithNativeParams", [param])
         if result.get("code") != 200:
             raise Exception(result.get("message"))
 
-        return result.get("data").get("contents")[0].get("content")
+        content = result.get("data").get("contents")[0].get("content")
+        toolCalls = result.get("data").get("contents")[0].get("toolCalls")
+        return content, toolCalls
 
     def generate(self, prompt):
         messages = [{

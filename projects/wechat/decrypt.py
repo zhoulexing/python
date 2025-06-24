@@ -101,7 +101,11 @@ class WeChatDecrypt:
         msg_text_list = [{ "id": item["id"], "content": item["msg"], "createTime": item["CreateTime"] } for item in msgs if item["type_name"] == "文本"]
         if len(msg_text_list) > 0:
             robot_text_msgs_list = config.get("robot_text_msgs_list")
-            robot_text_msgs_list.append(msg_text_list)
+            robot_text_msgs_list.append({
+                "id": self.random_str(16),
+                "msg_list": msg_text_list,
+                "ineffective": False
+            })
             config.set("robot_text_msgs_list", robot_text_msgs_list)
         return msg_text_list
     
