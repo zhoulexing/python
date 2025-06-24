@@ -22,7 +22,7 @@ class Config:
         self.save_config()
         
     def save_config(self):
-        with open(self.config_path, "w") as f:
+        with open(self.config_path, "w", encoding="utf-8") as f:
             json.dump(self.config, f, ensure_ascii=False, indent=4)
 
 if __name__ == "__main__":
