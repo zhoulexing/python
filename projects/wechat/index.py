@@ -21,6 +21,7 @@ class WeChat:
         self.text = ""
         self.file_names = []
         self.ip = "172.18.232.82:5001"
+        self.record = {}
 
     def listen_new_msgs(self):
         while True:
@@ -28,7 +29,8 @@ class WeChat:
                 f"http://{self.ip}/wechat/listen_new_msgs")
             msg_item = msg_item.json()
             print(f"wechat listen_new_msgs: {msg_item}")
-            if msg_item:
+            if msg_item and msg_item["id"] not in self.record:
+                self.record[msg_item["id"]] = True
                 text, file_names = self.wechat_ai.start(
                     msg_item["msg_list"])
                 print(f"wechat ai start: {text}, {file_names}")
