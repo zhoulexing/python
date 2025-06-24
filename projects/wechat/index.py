@@ -2,6 +2,8 @@ from .gui import WeChatGui
 import time
 import pyautogui
 import os
+from .decrypt import WeChatDecrypt
+from ai.youzan import Youzan
 
 
 class WeChatType:
@@ -13,7 +15,24 @@ class WeChat:
     def __init__(self):
         self.type = WeChatType.MULTI_CHAT
         self.wechat_gui = WeChatGui()
+        self.wechat_decrypt = WeChatDecrypt()
+        self.youzan = Youzan()
         self.multi_chat_index = 0
+
+    def listen_new_msgs(self):
+        while True:
+            msgs = self.wechat_decrypt.find_new_msgs_of_robot()
+            if len(msgs) > 0:
+                msg_text_list = [{"id": item["id"], "content": item["msg"]}
+                                 for item in msgs if item["type_name"] == "文本"]
+                if self.judge_start(msg_text_list):
+                    self.start()
+            time.sleep(5)
+            
+    def judge_start(self, msg_text_list):
+        if len(msg_text_list) > 0:
+            return True
+        return False
 
     def start(self):
         if self.type == WeChatType.MULTI_CHAT:
@@ -132,6 +151,7 @@ class WeChat:
         if self.type == WeChatType.MULTI_CHAT:
             self.multi_chat_index += 1
             self.start()
+
 
 if (__name__ == "__main__"):
     wechat = WeChat()

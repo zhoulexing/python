@@ -6,6 +6,7 @@ import string
 import json
 from datetime import datetime, timedelta
 from utils.config import Config
+import time
 
 config = Config()
 
@@ -97,8 +98,18 @@ class WeChatDecrypt:
         self.all_merge_real_time_db()
         user = self.get_user_by_nickname("火麒麟")
         msgs, users = self.get_msg_by_wxid(user['wxid'])
-        print(f"msgs: {msgs}")
-
+        msg_text_list = [{ "id": item["id"], "content": item["msg"], "createTime": item["CreateTime"] } for item in msgs if item["type_name"] == "文本"]
+        if len(msg_text_list) > 0:
+            robot_text_msgs_list = config.get("robot_text_msgs_list")
+            robot_text_msgs_list.append(msg_text_list)
+            config.set("robot_text_msgs_list", robot_text_msgs_list)
+        return msg_text_list
+    
+    def listen_robot_msg(self):
+        while True:
+            self.find_new_msgs_of_robot()
+            time.sleep(5)
+    
 if __name__ == "__main__":
     wechat_decrypt = WeChatDecrypt()
 
