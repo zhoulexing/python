@@ -139,7 +139,7 @@ class WeChat:
         time.sleep(0.5)
         # 11. 输入文字
         pyperclip.copy(self.text)
-        pyautogui.hotkey('command', 'v')
+        pyautogui.hotkey('ctrl', 'v')
         time.sleep(1)
         # 12. 输入图片
         self.wechat_gui.screenshot_moment(
