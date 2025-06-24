@@ -20,6 +20,7 @@ class Config:
     def set(self, key, value):
         self.config[key] = value
         self.save_config()
+        self.config = self.load_config()
         
     def save_config(self):
         with open(self.config_path, "w", encoding="utf-8") as f:
