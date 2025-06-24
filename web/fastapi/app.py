@@ -26,6 +26,7 @@ def compare_bottom_area(img1_path: str, img2_path: str, threshold: float = 0.1):
 
 @app.get("/wechat/listen_new_msgs")
 def listen_new_msgs():
+    config.reload_config()
     robot_text_msgs_list = config.get("robot_text_msgs_list")
     print(robot_text_msgs_list)
 

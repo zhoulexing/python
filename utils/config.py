@@ -14,13 +14,16 @@ class Config:
         with open(self.config_path, "r", encoding="utf-8") as f:
             return json.load(f)
         
+    def reload_config(self):
+        self.config = self.load_config()
+        
     def get(self, key, default=None):
         return self.config.get(key, default)
     
     def set(self, key, value):
         self.config[key] = value
         self.save_config()
-        self.config = self.load_config()
+        self.reload_config()
         
     def save_config(self):
         with open(self.config_path, "w", encoding="utf-8") as f:
