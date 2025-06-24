@@ -10,7 +10,7 @@
         "key": "701b14190ca54f76ba86deef6b308d9e68fd9d8a01134e90b656ed4b3a9348f5",
         "wx_dir": "C:\\WeChat Files\\wxid_mnrojdr78dhf12"
     },
-    "wx_msg_db_index": 135,
+    "wx_msg_db_index": 140,
     "robot_text_msgs_list": [
         {
             "id": "123123412341234123",
@@ -83,6 +83,61 @@
                     "id": 135,
                     "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手2\n图片：基于最火的labubu生成2张蛋糕图片",
                     "createTime": "2025-06-24 19:50:45"
+                }
+            ],
+            "ineffective": true
+        },
+        {
+            "id": "NmUQRivGuKhf789w",
+            "msg_list": [
+                {
+                    "id": 136,
+                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手3\n图片：基于最火的labubu生成2张蛋糕图片",
+                    "createTime": "2025-06-24 19:56:54"
+                }
+            ],
+            "ineffective": true
+        },
+        {
+            "id": "tH7dnI10pl3TrWKS",
+            "msg_list": [
+                {
+                    "id": 137,
+                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手4\n图片：基于最火的labubu生成2张蛋糕图片",
+                    "createTime": "2025-06-24 19:58:08"
+                }
+            ],
+            "ineffective": true
+        },
+        {
+            "id": "ERTOyiuIHvMBste5",
+            "msg_list": [
+                {
+                    "id": 138,
+                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手\n图片：基于最火的labubu生成1张蛋糕图片",
+                    "createTime": "2025-06-24 20:16:35"
+                }
+            ],
+            "ineffective": true
+        },
+        {
+            "id": "H1wi7gKbPVqeY9lp",
+            "msg_list": [
+                {
+                    "id": 139,
+                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手\n图片：一条小狗",
+                    "createTime": "2025-06-24 20:17:57"
+                }
+            ],
+            "ineffective": true
+        },
+        {
+            "id": "Kqvmc45owXDIbBzx",
+            "msg_list": [
+                {
+                    "id": 140,
+                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手\n图片：一条小狗在地上奔跑",
+                    "createTime": "2025-06-24 20:20:24"
                 }
             ],
             "ineffective": false
