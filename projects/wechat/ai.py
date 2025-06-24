@@ -1,5 +1,5 @@
 from ai.youzan import YouzanModel
-from ai.ali import AliModel
+from ai.zjie import ZjieModel
 import json
 import requests
 import uuid
@@ -8,7 +8,7 @@ import uuid
 class WeChatAi:
     def __init__(self):
         self.youzanModel = YouzanModel()
-        self.aliModel = AliModel()
+        self.zjieModel = ZjieModel()
 
     def execute(self, msg_list):
         messages = [
@@ -75,7 +75,7 @@ class WeChatAi:
     def image_generator(self, description, num):
         file_names = []
         for i in range(num):
-            url = self.aliModel.text_2_image(description)
+            url = self.zjieModel.text_2_image(description)
             # 下载图片
             response = requests.get(url)
             file_name = f"assets/images/wechat/{uuid.uuid4()}.png"

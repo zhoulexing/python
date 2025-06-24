@@ -27,7 +27,8 @@ class ZjieModel:
             "watermark": True,
         }
         response = requests.post(url, headers=headers, json=data)
-        return response.json()
+        result = response.json()
+        return result.get("data")[0].get("url")
 
 
 if __name__ == "__main__":

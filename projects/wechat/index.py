@@ -25,6 +25,7 @@ class WeChat:
         while True:
             msg_item = requests.get(
                 f"http://{self.ip}/wechat/listen_new_msgs")
+            msg_item = msg_item.json()
             if msg_item:
                 self.text, self.file_names = self.wechat_ai.start(
                     msg_item["msg_list"])
