@@ -26,9 +26,14 @@ class WeChat:
             msg_item = requests.get(
                 f"http://{self.ip}/wechat/listen_new_msgs")
             msg_item = msg_item.json()
+            print(f"wechat listen_new_msgs: {msg_item}")
             if msg_item:
-                self.text, self.file_names = self.wechat_ai.start(
+                text, file_names = self.wechat_ai.start(
                     msg_item["msg_list"])
+                print(f"wechat ai start: {text}, {file_names}")
+                self.text = text
+                self.file_names = file_names
+                self.start()
                 requests.post(f"http://{self.ip}/wechat/set_msg_ineffective", json={
                     "id": msg_item["id"]
                 })
