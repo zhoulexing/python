@@ -28,11 +28,12 @@ def compare_bottom_area(img1_path: str, img2_path: str, threshold: float = 0.1):
 def listen_new_msgs():
     config.reload_config()
     robot_text_msgs_list = config.get("robot_text_msgs_list")
-    print(robot_text_msgs_list)
 
     msgs_list = [
         item for item in robot_text_msgs_list if not item["ineffective"]]
     if len(msgs_list) > 0:
+        msgs_list[0]["ineffective"] = True
+        config.set("robot_text_msgs_list", robot_text_msgs_list)
         return msgs_list[0]
     return []
 

@@ -27,6 +27,8 @@ def test_web():
     requests.post(f"http://0.0.0.0:5001/wechat/set_msg_ineffective", json={
         "id": "123123412341234123"
     })
+    response = requests.get(f"http://0.0.0.0:5001/wechat/listen_new_msgs")
+    print(response.json())
 
 
 if __name__ == "__main__":

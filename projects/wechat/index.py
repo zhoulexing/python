@@ -4,6 +4,7 @@ import pyautogui
 import os
 from .ai import WeChatAi
 import requests
+import pyperclip
 
 
 class WeChatType:
@@ -34,9 +35,9 @@ class WeChat:
                 self.text = text
                 self.file_names = file_names
                 self.start()
-                requests.post(f"http://{self.ip}/wechat/set_msg_ineffective", json={
-                    "id": msg_item["id"]
-                })
+                # requests.post(f"http://{self.ip}/wechat/set_msg_ineffective", json={
+                #     "id": msg_item["id"]
+                # })
             time.sleep(5)
 
     def judge_start(self, msg_text_list):
@@ -137,7 +138,8 @@ class WeChat:
                                        "assets/images/wechat/moment_step_text.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
         time.sleep(0.5)
         # 11. 输入文字
-        pyautogui.typewrite(self.text)
+        pyperclip.copy(self.text)
+        pyautogui.hotkey('command', 'v')
         time.sleep(1)
         # 12. 输入图片
         self.wechat_gui.screenshot_moment(
