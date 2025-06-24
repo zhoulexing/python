@@ -159,4 +159,4 @@ class WeChat:
 
 if (__name__ == "__main__"):
     wechat = WeChat()
-    wechat.start()
+    wechat.listen_new_msgs()

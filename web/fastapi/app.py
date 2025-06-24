@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from fastapi.responses import PlainTextResponse
 from utils.image import ImageUtils
 from utils.config import Config
+
 
 config = Config()
 app = FastAPI()
@@ -36,10 +37,11 @@ def listen_new_msgs():
 
 
 @app.post("/wechat/set_msg_ineffective")
-def set_msg_ineffective(id: int):
+def set_msg_ineffective(msg_item: dict = Body(...)):
+    print(f"set_msg_ineffective: {msg_item}")
     robot_text_msgs_list = config.get("robot_text_msgs_list")
     for item in robot_text_msgs_list:
-        if item.get("id") == id:
+        if item.get("id") == msg_item.get("id"):
             item["ineffective"] = True
     config.set("robot_text_msgs_list", robot_text_msgs_list)
     return {"success": True}

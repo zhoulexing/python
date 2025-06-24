@@ -78,8 +78,8 @@ class WeChatAi:
             url = self.zjieModel.text_2_image(description)
             # 下载图片
             response = requests.get(url)
-            file_name = f"assets/images/wechat/{uuid.uuid4()}.png"
-            with open(file_name, "wb") as f:
+            file_name = f"{uuid.uuid4()}.png"
+            with open(f"assets/images/wechat/{file_name}", "wb") as f:
                 f.write(response.content)
             file_names.append(file_name)
         return file_names
