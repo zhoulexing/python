@@ -98,7 +98,7 @@ class WeChatDecrypt:
         self.all_merge_real_time_db()
         user = self.get_user_by_nickname("火麒麟")
         msgs, users = self.get_msg_by_wxid(user['wxid'])
-        msg_text_list = [{ "id": item["id"], "content": item["msg"], "createTime": item["CreateTime"] } for item in msgs if item["type_name"] == "文本"]
+        msg_text_list = [{ "id": item.get("id"), "content": item.get("msg"), "createTime": item.get("CreateTime") } for item in msgs if item.get("type_name") == "文本"]
         if len(msg_text_list) > 0:
             robot_text_msgs_list = config.get("robot_text_msgs_list")
             robot_text_msgs_list.append(msg_text_list)
