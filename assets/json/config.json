@@ -13,103 +13,6 @@
     "wx_msg_db_index": 140,
     "robot_text_msgs_list": [
         {
-            "id": "123123412341234123",
-            "msg_list": [
-                {
-                    "id": 126,
-                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手\n图片：基于最火的labubu生成1张蛋糕图片",
-                    "createTime": "2025-06-24 10:29:53"
-                }
-            ],
-            "ineffective": true
-        },
-        {
-            "id": "MLskNIr7bivZYl84",
-            "msg_list": [
-                {
-                    "id": 128,
-                    "content": "[['帮我发条朋友圈，具体内容如下：\\n文案：拉布布蛋糕|这阵风还在吹,三款快入手\\n图片：基于最火的labubu生成2张蛋糕图片']]",
-                    "createTime": "2025-06-24 10:54:19"
-                },
-                {
-                    "id": 129,
-                    "content": "172.18.205.127",
-                    "createTime": "2025-06-24 14:03:24"
-                },
-                {
-                    "id": 130,
-                    "content": "http://172.18.205.127:5001/wechat/listen_new_msgs",
-                    "createTime": "2025-06-24 14:04:23"
-                },
-                {
-                    "id": 131,
-                    "content": "uvicorn web.fastapi.app:app --host 0.0.0.0 --port 5001 --reload",
-                    "createTime": "2025-06-24 17:08:28"
-                },
-                {
-                    "id": 132,
-                    "content": "PS C:\\code\\python> pip install uvicorn\nDefaulting to user installation because normal site-packages is not writeable\nRequirement already satisfied: uvicorn in c:\\users\\gt\\appdata\\local\\packages\\pythonsoftwarefoundation.python.3.13_qbz5n2kfra8p0\\localcache\\local-packages\\python313\\site-packages (0.34.3)\nRequirement already satisfied: click>=7.0 in c:\\users\\gt\\appdata\\local\\packages\\pythonsoftwarefoundation.python.3.13_qbz5n2kfra8p0\\localcache\\local-packages\\python313\\site-packages (from uvicorn) (8.2.1)\nRequirement already satisfied: h11>=0.8 in c:\\users\\gt\\appdata\\local\\packages\\pythonsoftwarefoundation.python.3.13_qbz5n2kfra8p0\\localcache\\local-packages\\python313\\site-packages (from uvicorn) (0.16.0)\nRequirement already satisfied: colorama in c:\\users\\gt\\appdata\\local\\packages\\pythonsoftwarefoundation.python.3.13_qbz5n2kfra8p0\\localcache\\local-packages\\python313\\site-packages (from click>=7.0->uvicorn) (0.4.6)\nPS C:\\code\\python> uvicorn web.fastapi.app:app --host 0.0.0.0 --port 5001 --reload\nuvicorn : 无法将“uvicorn”项识别为 cmdlet、函数、脚本文件或可运行程序的名称。请检查名称的拼写，如果包括路径，请确保路\n径正确，然后再试一次。\n所在位置 行:1 字符: 1\n+ uvicorn web.fastapi.app:app --host 0.0.0.0 --port 5001 --reload\n+ ~~~~~~~\n    + CategoryInfo          : ObjectNotFound: (uvicorn:String) [], CommandNotFoundException\n    + FullyQualifiedErrorId : CommandNotFoundException",
-                    "createTime": "2025-06-24 17:11:04"
-                }
-            ],
-            "ineffective": true
-        },
-        {
-            "id": "RNGVnfmW4Xu7AKD5",
-            "msg_list": [
-                {
-                    "id": 133,
-                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手1\n图片：基于最火的labubu生成2张蛋糕图片",
-                    "createTime": "2025-06-24 19:39:13"
-                }
-            ],
-            "ineffective": true
-        },
-        {
-            "id": "wejDVcRuXPvKE5k4",
-            "msg_list": [
-                {
-                    "id": 134,
-                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手，速度\n图片：基于最火的labubu生成2张蛋糕图片",
-                    "createTime": "2025-06-24 19:43:24"
-                }
-            ],
-            "ineffective": true
-        },
-        {
-            "id": "tPwHcnUeQauOFMDp",
-            "msg_list": [
-                {
-                    "id": 135,
-                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手2\n图片：基于最火的labubu生成2张蛋糕图片",
-                    "createTime": "2025-06-24 19:50:45"
-                }
-            ],
-            "ineffective": true
-        },
-        {
-            "id": "NmUQRivGuKhf789w",
-            "msg_list": [
-                {
-                    "id": 136,
-                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手3\n图片：基于最火的labubu生成2张蛋糕图片",
-                    "createTime": "2025-06-24 19:56:54"
-                }
-            ],
-            "ineffective": true
-        },
-        {
-            "id": "tH7dnI10pl3TrWKS",
-            "msg_list": [
-                {
-                    "id": 137,
-                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手4\n图片：基于最火的labubu生成2张蛋糕图片",
-                    "createTime": "2025-06-24 19:58:08"
-                }
-            ],
-            "ineffective": true
-        },
-        {
             "id": "ERTOyiuIHvMBste5",
             "msg_list": [
                 {
@@ -140,7 +43,7 @@
                     "createTime": "2025-06-24 20:20:24"
                 }
             ],
-            "ineffective": false
+            "ineffective": true
         }
     ]
 }

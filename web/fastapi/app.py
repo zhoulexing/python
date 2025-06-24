@@ -2,6 +2,7 @@ from fastapi import FastAPI, Body
 from fastapi.responses import PlainTextResponse
 from utils.image import ImageUtils
 from utils.config import Config
+import copy
 
 
 config = Config()
@@ -32,9 +33,10 @@ def listen_new_msgs():
     msgs_list = [
         item for item in robot_text_msgs_list if not item["ineffective"]]
     if len(msgs_list) > 0:
+        msgs_item = copy.deepcopy(msgs_list[0])
         msgs_list[0]["ineffective"] = True
         config.set("robot_text_msgs_list", robot_text_msgs_list)
-        return msgs_list[0]
+        return msgs_item
     return []
 
 

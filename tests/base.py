@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import json
 import requests
+import copy
 
 
 def test_if():
@@ -29,7 +30,14 @@ def test_web():
     })
     response = requests.get(f"http://0.0.0.0:5001/wechat/listen_new_msgs")
     print(response.json())
+    
+def test_copy():
+    original_dict = {"a": 1, "b": 2, "c": {"d": 4}}
+    new_dict = copy.deepcopy(original_dict)
+    new_dict["a"] = 100
+    print(original_dict)
+    print(new_dict)
 
 
 if __name__ == "__main__":
-    test_web()
+    test_copy()

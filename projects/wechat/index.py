@@ -142,15 +142,16 @@ class WeChat:
         pyautogui.hotkey('ctrl', 'v')
         time.sleep(1)
         # 12. 输入图片
-        self.wechat_gui.screenshot_moment(
-            "assets/images/wechat/current_moment_screenshot.png"
-        )
-        self.wechat_gui.click_by_image("assets/images/wechat/current_moment_screenshot.png",
-                                       "assets/images/wechat/moment_step_image.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
-        time.sleep(1)
-        image_dir = os.path.join(os.path.dirname(
-            __file__), "../../assets/images/wechat")
-        self.wechat_gui.select_images_from_dialog(image_dir, self.file_names)
+        if len(self.file_names) > 0:
+            self.wechat_gui.screenshot_moment(
+                "assets/images/wechat/current_moment_screenshot.png"
+            )
+            self.wechat_gui.click_by_image("assets/images/wechat/current_moment_screenshot.png",
+                                        "assets/images/wechat/moment_step_image.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
+            time.sleep(1)
+            image_dir = os.path.join(os.path.dirname(
+                __file__), "../../assets/images/wechat")
+            self.wechat_gui.select_images_from_dialog(image_dir, self.file_names)
 
         # 13. 点击发送按钮
         self.wechat_gui.screenshot_moment(

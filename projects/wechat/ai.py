@@ -69,19 +69,38 @@ class WeChatAi:
         return self.youzanModel.chat(messages, tools)
 
     def text_generator(self, content):
-        print(f"text_generator: {content}")
-        return content
+        prompt = f"""
+        根据用户的输入，生成朋友圈文案，如果用户的输入没有要求用AI生成，则返回用户输入的内容。
+        如果用户的输入要求用AI生成，则根据用户的输入生成朋友圈文案。
+        
+        用户的输入如下：
+        {content}
+        
+        要求：
+        文案字数在20字以内，不要超过20字
+        """
+        
+        try:
+            content, toolCalls = self.youzanModel.generate(prompt)
+            return content
+        except Exception as e:
+            print(f"text_generator error: {e}")
+            return content
 
     def image_generator(self, description, num):
         file_names = []
-        for i in range(num):
-            url = self.zjieModel.text_2_image(description)
-            # 下载图片
-            response = requests.get(url)
-            file_name = f"{uuid.uuid4()}.png"
-            with open(f"assets/images/wechat/{file_name}", "wb") as f:
-                f.write(response.content)
-            file_names.append(file_name)
+        try:
+            for i in range(num):
+                url = self.zjieModel.text_2_image(description)
+                # 下载图片
+                response = requests.get(url)
+                file_name = f"{uuid.uuid4()}.png"
+                with open(f"assets/images/wechat/{file_name}", "wb") as f:
+                    f.write(response.content)
+                file_names.append(file_name)
+        except Exception as e:
+            print(f"image_generator error: {e}")
+            
         return file_names
 
     def start(self, msg_list):
