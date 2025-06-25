@@ -73,6 +73,7 @@ class WeChatAi:
         return self.youzanModel.chat(self.messages, tools)
 
     def text_generator(self, content):
+        print(f"text_generator params: {content}")
         messages = [
             {
                 "role": "system",
@@ -103,6 +104,7 @@ class WeChatAi:
             return "物美价廉，优惠满满，性价比无敌！"
 
     def image_generator(self, description, num = 1):
+        print(f"image_generator params: {description}, {num}")
         image_urls = []
         try:
             for i in range(num):
@@ -146,14 +148,10 @@ class WeChatAi:
             return False, "", []
         self.add_message("user", message)
         sussess, text, image_urls = self.step()
-        if sussess:
-            print(f"test text: {text}, image_urls: {image_urls}")
-            return True, text, image_urls
-        count += 1
-        return self.test(count, "是")
+        print(f"test result: {sussess}, {text}, {image_urls}")
 
 
 if __name__ == "__main__":
     wechat_ai = WeChatAi()
     wechat_ai.test(
-        message="帮我发条朋友圈，具体内容如下：\n文案：用ai生成，要形容很便宜\n图片：基于最火的labubu生成1张蛋糕图片")
+        message="帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕，快入手\n图片：一条小狗在奔跑")
