@@ -1,11 +1,11 @@
 from .gui import WeChatGui
 import time
-import pyautogui
-import os
 from .ai import WeChatAi
 import requests
-import pyperclip
-
+from .decrypt import WeChatDecrypt
+from utils.config import Config
+import uuid
+import sys
 
 class WeChatType:
     WECHAT = "wechat"
@@ -14,159 +14,72 @@ class WeChatType:
 
 class WeChat:
     def __init__(self):
-        self.type = WeChatType.WECHAT
         self.wechat_gui = WeChatGui()
         self.wechat_ai = WeChatAi()
-        self.multi_chat_index = 0
-        self.text = ""
-        self.file_names = []
+        self.wechat_decrypt = WeChatDecrypt()
+        self.config = Config()
+        
         self.ip = "172.18.232.82:5001"
         self.record = {}
 
-    def listen_new_msgs(self):
+    def listen_public(self):
         while True:
-            msg_item = requests.get(
+            material_item = requests.get(
                 f"http://{self.ip}/wechat/listen_new_msgs")
-            msg_item = msg_item.json()
-            print(f"wechat listen_new_msgs: {msg_item}")
-            if msg_item and msg_item["id"] not in self.record:
-                self.record[msg_item["id"]] = True
-                text, file_names = self.wechat_ai.start(
-                    msg_item["msg_list"])
-                print(f"wechat ai start: {text}, {file_names}")
-                self.text = text
-                self.file_names = file_names
-                self.start()
+            material_item = material_item.json()
+            print(f"wechat listen_material_item: {material_item}")
+            if material_item and material_item["id"] not in self.record:
+                self.record[material_item["id"]] = True
+                
+                self.wechat_gui.set_text(material_item["text"])
+                self.wechat_gui.download_image_urls(material_item["image_urls"])
+                self.wechat_gui.send_moment()
                 # requests.post(f"http://{self.ip}/wechat/set_msg_ineffective", json={
-                #     "id": msg_item["id"]
+                #     "id": material_item["id"]
                 # })
-            time.sleep(5)
+            time.sleep(2)
+            
+    def decrypt_generate(self):
+        """
+        这个需要在解密的电脑上运行，需要启动定时解密任务和启动http接口服务
+        轮询解密数据库，如果解密到新的消息，则调用ai来判定是否需要发布朋友圈，并生成朋友圈文案
+        """
+        while True:
+            msg_text_list = self.wechat_decrypt.find_new_msgs_of_robot("测试2号13282127")
+            print(f"wechat decrypt msg_text_list: {msg_text_list}")
+            if len(msg_text_list) > 0:
+                for msg_text in msg_text_list:
+                    self.wechat_ai.add_message("user", msg_text["content"])
+                sussess, text, image_urls = self.wechat_ai.step()
+                print(f"wechat ai step: {sussess}, {text}, {image_urls}")
+                if text and image_urls and not sussess:
+                    self.wechat_gui.set_text(text)
+                    self.wechat_gui.download_image_urls(image_urls)
+                    self.wechat_gui.send_msg()
+                if sussess:
+                    friends_circle_material = self.config.get("friends_circle_material")
+                    friends_circle_material.append({
+                        "id": str(uuid.uuid4()),
+                        "text": text,
+                        "image_urls": image_urls,
+                        "ineffective": False
+                    })
+                    self.config.set("friends_circle_material", friends_circle_material)
+            time.sleep(2)
 
-    def judge_start(self, msg_text_list):
-        if len(msg_text_list) > 0:
-            return True
-        return False
-
-    def start(self):
-        if self.type == WeChatType.MULTI_CHAT:
-            print("正在打开多聊...")
-            # 1. 打开多聊
-            if not self.wechat_gui.open_multi_chat():
-                print("打开多聊失败")
-                return
-
-            # 2. 查找多聊窗口
-            print("正在查找多聊窗口...")
-            if not self.wechat_gui.find_multi_chat_window():
-                print("未找到微信窗口，请确保微信已启动")
-                return
-            if self.multi_chat_index >= len(self.wechat_gui.multi_chat_children_windows):
-                print("多聊子窗口索引超出范围")
-                return
-
-            # 3. 将多聊窗口置于前台，并等待加载
-            if not self.wechat_gui.bring_multi_chat_window_to_front():
-                print("将多聊窗口置于前台失败")
-                return
-
-            # 4. 截取多聊截图
-            screenshot = self.wechat_gui.screenshot_by_rect(
-                "assets/images/wechat/current_multi_chat_screenshot.png",
-                self.wechat_gui.multi_chat_rect
-            )
-            if not screenshot:
-                print("截图失败")
-                return
-
-            self.wechat_gui.click_multi_chat_by_index(self.multi_chat_index)
-
-            # 5. 进入朋友圈
-            if not self.wechat_gui.click_by_image("assets/images/wechat/current_multi_chat_screenshot.png",
-                                                  "assets/images/wechat/moment_step_1.png", 0.7, relative=True, rect=self.wechat_gui.multi_chat_rect):
-                print("进入朋友圈失败")
-                return
-        else:
-            # 1. 打开微信
-            print("正在打开微信...")
-            if not self.wechat_gui.open_wechat():
-                print("打开微信失败")
-                return
-
-            # 2. 查找微信窗口
-            print("正在查找微信/多聊窗口...")
-            if not self.wechat_gui.find_wechat_window():
-                print("未找到微信窗口，请确保微信已启动")
-                return
-
-            # 3. 显示微信窗口信息
-            info = self.wechat_gui.get_wechat_info()
-            if info:
-                print(f"微信窗口信息: {info}")
-            else:
-                print("未找到微信窗口")
-                return
-
-            # 4. 截取微信截图
-            print("正在截取微信截图...")
-            screenshot = self.wechat_gui.screenshot_wechat(
-                "assets/images/wechat/current_wechat_screenshot.png"
-            )
-            if not screenshot:
-                print("截图失败")
-                return
-            # 5. 进入朋友圈
-            if not self.wechat_gui.click_by_image("assets/images/wechat/current_wechat_screenshot.png",
-                                                  "assets/images/wechat/moment_step_1.png", 0.7, relative=True, rect=self.wechat_gui.wechat_rect):
-                print("进入朋友圈失败")
-                return
-
-        # 6. 查找朋友圈窗口
-        self.wechat_gui.find_moment_window()
-        # 7. 将朋友圈窗口置于前台，并等待加载
-        self.wechat_gui.bring_moment_window_to_front()
-        # 8. 截取朋友圈截图
-        self.wechat_gui.screenshot_moment(
-            "assets/images/wechat/current_moment_screenshot.png"
-        )
-        # 9. 点击发朋友圈的弹窗按钮
-        self.wechat_gui.click_by_image("assets/images/wechat/current_moment_screenshot.png",
-                                       "assets/images/wechat/moment_step_2.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
-
-        # 10. 点击弹窗中的写文字输入框
-        self.wechat_gui.screenshot_moment(
-            "assets/images/wechat/current_moment_screenshot.png"
-        )
-        self.wechat_gui.click_by_image("assets/images/wechat/current_moment_screenshot.png",
-                                       "assets/images/wechat/moment_step_text.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
-        time.sleep(0.5)
-        # 11. 输入文字
-        pyperclip.copy(self.text)
-        pyautogui.hotkey('ctrl', 'v')
-        time.sleep(1)
-        # 12. 输入图片
-        if len(self.file_names) > 0:
-            self.wechat_gui.screenshot_moment(
-                "assets/images/wechat/current_moment_screenshot.png"
-            )
-            self.wechat_gui.click_by_image("assets/images/wechat/current_moment_screenshot.png",
-                                        "assets/images/wechat/moment_step_image.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
-            time.sleep(1)
-            image_dir = os.path.join(os.path.dirname(
-                __file__), "../../assets/images/wechat")
-            self.wechat_gui.select_images_from_dialog(image_dir, self.file_names)
-
-        # 13. 点击发送按钮
-        self.wechat_gui.screenshot_moment(
-            "assets/images/wechat/current_moment_screenshot.png"
-        )
-        self.wechat_gui.click_by_image("assets/images/wechat/current_moment_screenshot.png",
-                                       "assets/images/wechat/moment_step_3.png", 0.7, relative=True, rect=self.wechat_gui.moment_rect)
-
-        if self.type == WeChatType.MULTI_CHAT:
-            self.multi_chat_index += 1
-            self.start()
-
-
-if (__name__ == "__main__"):
+if __name__ == "__main__":
     wechat = WeChat()
-    wechat.listen_new_msgs()
+    if len(sys.argv) > 1:
+        mode = sys.argv[1]
+        if mode == "decrypt":
+            wechat.decrypt_generate()
+        elif mode == "listen":
+            wechat.listen_public()
+        else:
+            print("Usage: python index.py [decrypt|listen]")
+            print("  decrypt: 运行解密生成模式")
+            print("  listen: 运行监听公开模式")
+    else:
+        print("Usage: python index.py [decrypt|listen]")
+        print("  decrypt: 运行解密生成模式")
+        print("  listen: 运行监听公开模式")

@@ -10,62 +10,6 @@
         "key": "701b14190ca54f76ba86deef6b308d9e68fd9d8a01134e90b656ed4b3a9348f5",
         "wx_dir": "C:\\WeChat Files\\wxid_mnrojdr78dhf12"
     },
-    "wx_msg_db_index": 142,
-    "robot_text_msgs_list": [
-        {
-            "id": "ERTOyiuIHvMBste5",
-            "msg_list": [
-                {
-                    "id": 138,
-                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手\n图片：基于最火的labubu生成1张蛋糕图片",
-                    "createTime": "2025-06-24 20:16:35"
-                }
-            ],
-            "ineffective": true
-        },
-        {
-            "id": "H1wi7gKbPVqeY9lp",
-            "msg_list": [
-                {
-                    "id": 139,
-                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手\n图片：一条小狗",
-                    "createTime": "2025-06-24 20:17:57"
-                }
-            ],
-            "ineffective": true
-        },
-        {
-            "id": "Kqvmc45owXDIbBzx",
-            "msg_list": [
-                {
-                    "id": 140,
-                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手\n图片：一条小狗在地上奔跑",
-                    "createTime": "2025-06-24 20:20:24"
-                }
-            ],
-            "ineffective": true
-        },
-        {
-            "id": "vZAxzp3EmItNKjLh",
-            "msg_list": [
-                {
-                    "id": 141,
-                    "content": "帮我发条朋友圈，具体内容如下：\n文案：拉布布蛋糕|这阵风还在吹,三款快入手\n图片：一条小狗在地上奔跑",
-                    "createTime": "2025-06-24 20:46:01"
-                }
-            ],
-            "ineffective": true
-        },
-        {
-            "id": "lb7RPNmGMgUODyKC",
-            "msg_list": [
-                {
-                    "id": 142,
-                    "content": "帮我发条朋友圈，具体内容如下：\n文案：由ai生成，要求形容蛋糕好吃\n图片：一条小猫咪在睡觉",
-                    "createTime": "2025-06-24 20:47:35"
-                }
-            ],
-            "ineffective": true
-        }
-    ]
+    "wx_msg_db_index": 135,
+    "friends_circle_material": []
 }
