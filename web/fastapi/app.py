@@ -2,6 +2,7 @@ from fastapi import FastAPI, Body
 from fastapi.responses import PlainTextResponse
 from utils.image import ImageUtils
 from utils.config import Config
+import copy
 
 
 config = Config()
@@ -27,25 +28,26 @@ def compare_bottom_area(img1_path: str, img2_path: str, threshold: float = 0.1):
 @app.get("/wechat/listen_new_msgs")
 def listen_new_msgs():
     config.reload_config()
-    robot_text_msgs_list = config.get("robot_text_msgs_list")
+    friends_circle_material = config.get("friends_circle_material")
 
-    msgs_list = [
-        item for item in robot_text_msgs_list if not item["ineffective"]]
-    if len(msgs_list) > 0:
-        msgs_list[0]["ineffective"] = True
-        config.set("robot_text_msgs_list", robot_text_msgs_list)
-        return msgs_list[0]
-    return []
+    material_list = [
+        item for item in friends_circle_material if not item["ineffective"]]
+    if len(material_list) > 0:
+        material_item = copy.deepcopy(material_list[0])
+        material_list[0]["ineffective"] = True
+        config.set("friends_circle_material", friends_circle_material)
+        return material_item
+    return {}
 
 
 @app.post("/wechat/set_msg_ineffective")
 def set_msg_ineffective(msg_item: dict = Body(...)):
-    print(f"set_msg_ineffective: {msg_item}")
-    robot_text_msgs_list = config.get("robot_text_msgs_list")
-    for item in robot_text_msgs_list:
+    print(f"set_ineffective: {msg_item}")
+    friends_circle_material = config.get("friends_circle_material")
+    for item in friends_circle_material:
         if item.get("id") == msg_item.get("id"):
             item["ineffective"] = True
-    config.set("robot_text_msgs_list", robot_text_msgs_list)
+    config.set("friends_circle_material", friends_circle_material)
     return {"success": True}
 
 

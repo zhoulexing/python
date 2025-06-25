@@ -6,12 +6,20 @@ import win32con
 from utils.image import ImageUtils
 import os
 import pyperclip
+import requests
+import uuid
 
 image_utils = ImageUtils()
 
 
+class WeChatType:
+    WECHAT = "wechat"
+    MULTI_CHAT = "multi_chat"
+
+
 class WeChatGui:
     def __init__(self):
+        self.type = WeChatType.WECHAT
         self.wechat_window = None
         self.wechat_rect = None
         self.moment_window = None
@@ -19,6 +27,9 @@ class WeChatGui:
         self.multi_chat_window = None
         self.multi_chat_rect = None
         self.multi_chat_children_windows = []
+        self.multi_chat_index = 0
+        self.text = ""
+        self.file_names = []
 
     def open_wechat(self):
         """打开微信应用"""
@@ -48,7 +59,7 @@ class WeChatGui:
         except Exception as e:
             print(f"启动微信失败: {e}")
             return False
-        
+
     def open_multi_chat(self):
         """启动多聊"""
         try:
@@ -86,12 +97,12 @@ class WeChatGui:
             print(f"图片的坐标: ({x}, {y}, {width}, {height})")
             return self.click_at_coordinate(
                 int(x + width / 2), int(y + height / 2), relative, rect=rect)
-            
+
     def click_multi_chat_by_index(self, index):
         """根据索引点击多聊"""
         result = image_utils.image_matcher(
             "assets/images/wechat/current_multi_chat_screenshot.png",
-            "assets/images/wechat/multi_chat_split_btn.png", 
+            "assets/images/wechat/multi_chat_split_btn.png",
             0.7,
         )
         if len(result) == 0:
@@ -105,7 +116,6 @@ class WeChatGui:
             final_y = y + height + 18 + (index * 154) + 154/2
             return self.click_at_coordinate(
                 int(x + width / 2), int(final_y), True, rect=self.multi_chat_rect)
-            
 
     def find_moment_window(self):
         """查找朋友圈窗口"""
@@ -142,7 +152,7 @@ class WeChatGui:
         else:
             print("未找到朋友圈窗口，无法置于前台")
             return False
-    
+
     def find_multi_chat_window(self):
         """查找多聊窗口"""
         def enum_windows_callback(hwnd, windows):
@@ -151,21 +161,23 @@ class WeChatGui:
                 if "金舟多聊" == window_title:
                     windows.append((hwnd, window_title))
                 if "金舟多聊子窗体" in window_title:
-                    self.multi_chat_children_windows.append((hwnd, window_title))
+                    self.multi_chat_children_windows.append(
+                        (hwnd, window_title))
 
         windows = []
         win32gui.EnumWindows(enum_windows_callback, windows)
 
         if windows:
             self.multi_chat_window = windows[0][0]  # 取第一个多聊窗口
-            self.multi_chat_rect = win32gui.GetWindowRect(self.multi_chat_window)
+            self.multi_chat_rect = win32gui.GetWindowRect(
+                self.multi_chat_window)
             print(f"找到多聊窗口: {windows[0][1]}")
             print(f"窗口位置: {self.multi_chat_rect}")
             return True
         else:
             print("未找到多聊窗口")
             return False
-        
+
     def find_wechat_window(self):
         """查找微信窗口"""
         def enum_windows_callback(hwnd, windows):
@@ -186,12 +198,13 @@ class WeChatGui:
         else:
             print("未找到微信窗口")
             return False
-        
+
     def bring_multi_chat_window_to_front(self):
         """将多聊窗口置于前台"""
         if self.multi_chat_window:
             try:
-                win32gui.ShowWindow(self.multi_chat_window, win32con.SW_RESTORE)
+                win32gui.ShowWindow(self.multi_chat_window,
+                                    win32con.SW_RESTORE)
                 win32gui.SetForegroundWindow(self.multi_chat_window)
                 time.sleep(0.5)
                 return True
@@ -297,7 +310,7 @@ class WeChatGui:
         except Exception as e:
             print(f"点击失败: {e}")
             return False
-        
+
     def get_multi_chat_info(self):
         """获取多聊窗口信息"""
         if self.multi_chat_window and self.multi_chat_rect:
@@ -375,3 +388,222 @@ class WeChatGui:
         except Exception as e:
             print(f"选择图片失败: {e}")
             return False
+
+    def set_text(self, text):
+        self.text = text
+        
+    def download_image_urls(self, image_urls):
+        file_names = []
+        for image_url in image_urls:
+            response = requests.get(image_url)
+            file_name = f"{uuid.uuid4()}.png"
+            with open(f"assets/images/wechat/{file_name}", "wb") as f:
+                f.write(response.content)
+            file_names.append(file_name)
+        self.file_names = file_names
+        return file_names
+
+    def set_file_names(self, file_names):
+        self.file_names = file_names
+
+    def send_moment(self):
+        if self.type == WeChatType.MULTI_CHAT:
+            print("正在打开多聊...")
+            # 1. 打开多聊
+            if not self.open_multi_chat():
+                print("打开多聊失败")
+                return
+
+            # 2. 查找多聊窗口
+            print("正在查找多聊窗口...")
+            if not self.find_multi_chat_window():
+                print("未找到微信窗口，请确保微信已启动")
+                return
+            if self.multi_chat_index >= len(self.multi_chat_children_windows):
+                print("多聊子窗口索引超出范围")
+                return
+
+            # 3. 将多聊窗口置于前台，并等待加载
+            if not self.bring_multi_chat_window_to_front():
+                print("将多聊窗口置于前台失败")
+                return
+
+            # 4. 截取多聊截图
+            screenshot = self.screenshot_by_rect(
+                "assets/images/wechat/current_multi_chat_screenshot.png",
+                self.multi_chat_rect
+            )
+            if not screenshot:
+                print("截图失败")
+                return
+
+            self.click_multi_chat_by_index(self.multi_chat_index)
+
+            # 5. 进入朋友圈
+            if not self.click_by_image("assets/images/wechat/current_multi_chat_screenshot.png",
+                                       "assets/images/wechat/moment_step_1.png", 0.7, relative=True, rect=self.multi_chat_rect):
+                print("进入朋友圈失败")
+                return
+        else:
+            # 1. 打开微信
+            print("正在打开微信...")
+            if not self.open_wechat():
+                print("打开微信失败")
+                return
+
+            # 2. 查找微信窗口
+            print("正在查找微信/多聊窗口...")
+            if not self.find_wechat_window():
+                print("未找到微信窗口，请确保微信已启动")
+                return
+
+            # 3. 显示微信窗口信息
+            info = self.get_wechat_info()
+            if info:
+                print(f"微信窗口信息: {info}")
+            else:
+                print("未找到微信窗口")
+                return
+
+            # 4. 截取微信截图
+            print("正在截取微信截图...")
+            screenshot = self.screenshot_wechat(
+                "assets/images/wechat/current_wechat_screenshot.png"
+            )
+            if not screenshot:
+                print("截图失败")
+                return
+            # 5. 进入朋友圈
+            if not self.click_by_image("assets/images/wechat/current_wechat_screenshot.png",
+                                       "assets/images/wechat/moment_step_1.png", 0.7, relative=True, rect=self.wechat_rect):
+                print("进入朋友圈失败")
+                return
+
+        # 6. 查找朋友圈窗口
+        self.find_moment_window()
+        # 7. 将朋友圈窗口置于前台，并等待加载
+        self.bring_moment_window_to_front()
+        # 8. 截取朋友圈截图
+        self.screenshot_moment(
+            "assets/images/wechat/current_moment_screenshot.png"
+        )
+        # 9. 点击发朋友圈的弹窗按钮
+        self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
+                            "assets/images/wechat/moment_step_2.png", 0.7, relative=True, rect=self.moment_rect)
+
+        # 10. 点击弹窗中的写文字输入框
+        self.screenshot_moment(
+            "assets/images/wechat/current_moment_screenshot.png"
+        )
+        self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
+                            "assets/images/wechat/moment_step_text.png", 0.7, relative=True, rect=self.moment_rect)
+        time.sleep(0.5)
+        # 11. 输入文字
+        pyperclip.copy(self.text)
+        pyautogui.hotkey('ctrl', 'v')
+        time.sleep(1)
+        # 12. 输入图片
+        if len(self.file_names) > 0:
+            self.screenshot_moment(
+                "assets/images/wechat/current_moment_screenshot.png"
+            )
+            self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
+                                "assets/images/wechat/moment_step_image.png", 0.7, relative=True, rect=self.moment_rect)
+            time.sleep(1)
+            image_dir = os.path.join(os.path.dirname(
+                __file__), "../../assets/images/wechat")
+            self.select_images_from_dialog(image_dir, self.file_names)
+
+        # 13. 点击发送按钮
+        self.screenshot_moment(
+            "assets/images/wechat/current_moment_screenshot.png"
+        )
+        self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
+                            "assets/images/wechat/moment_step_3.png", 0.7, relative=True, rect=self.moment_rect)
+
+        if self.type == WeChatType.MULTI_CHAT:
+            self.multi_chat_index += 1
+            self.start()
+
+    def send_msg(self):
+        # 1. 打开微信
+        print("正在打开微信...")
+        if not self.open_wechat():
+            print("打开微信失败")
+            return
+
+        # 2. 查找微信窗口
+        print("正在查找微信/多聊窗口...")
+        if not self.find_wechat_window():
+            print("未找到微信窗口，请确保微信已启动")
+            return
+
+        # 3. 显示微信窗口信息
+        info = self.get_wechat_info()
+        if info:
+            print(f"微信窗口信息: {info}")
+        else:
+            print("未找到微信窗口")
+            return
+
+        # 4. 截取微信截图
+        print("正在截取微信截图...")
+        screenshot = self.screenshot_wechat(
+            "assets/images/wechat/current_wechat_screenshot.png"
+        )
+        if not screenshot:
+            print("截图失败")
+            return
+
+        # 5. 点击接受消息的人
+        if not self.click_by_image("assets/images/wechat/chat_target.png",
+                                   "assets/images/wechat/current_wechat_screenshot.png", 0.7, relative=True, rect=self.wechat_rect):
+            print("点击接受消息的人失败")
+
+        # 6. 选择要发送的文件
+        if not self.click_by_image("assets/images/wechat/chat_select_img.png",
+                                   "assets/images/wechat/current_wechat_screenshot.png", 0.7, relative=True, rect=self.wechat_rect):
+            print("点击输入框失败")
+            return
+        
+        # 6.1. 进入目标文件夹
+        image_folder = os.path.join(os.path.dirname(
+            __file__), "../../assets/images/wechat")
+        pyperclip.copy(image_folder)
+        pyautogui.hotkey('ctrl', 'l')  # 激活地址栏
+        time.sleep(0.5)
+        pyautogui.hotkey('ctrl', 'a')  # 全选
+        time.sleep(0.2)
+        pyautogui.press('delete')
+        time.sleep(0.2)
+        pyautogui.hotkey('ctrl', 'v')  # 粘贴文件夹路径
+        time.sleep(0.5)
+        pyautogui.press('enter')
+        time.sleep(1)
+
+        # 6.2. 粘贴所有文件名到文件名输入框
+        filenames_str = ' '.join(f'"{name}"' for name in self.file_names)
+        pyperclip.copy(filenames_str)
+        pyautogui.hotkey('alt', 'n')  # 激活文件名输入框
+        pyautogui.hotkey('ctrl', 'a')  # 全选
+        time.sleep(0.2)
+        pyautogui.press('delete')
+        time.sleep(0.2)
+        pyautogui.hotkey('ctrl', 'v')  # 粘贴文件名
+        time.sleep(0.5)
+        pyautogui.press('enter')  # 确认选择
+        print(f"已选择 {len(self.file_names)} 张图片")
+        
+        # 6.3 截图，并点击发送
+        screenshot = self.screenshot_wechat(
+            "assets/images/wechat/current_wechat_screenshot.png"
+        )
+        self.click_by_image("assets/images/wechat/chat_send_img.png",
+                            "assets/images/wechat/current_wechat_screenshot.png", 0.7, relative=True, rect=self.wechat_rect)
+        time.sleep(1)
+
+        # 7. 输入文字
+        pyperclip.copy(f"{self.text}\n 朋友圈文案和图片如上，确认要发送吗？")
+        pyautogui.hotkey('ctrl', 'v')
+        time.sleep(1)
+        pyautogui.press('enter')  # 发送

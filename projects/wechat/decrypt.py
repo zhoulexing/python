@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timedelta
 from utils.config import Config
 import time
+from .ai import WeChatAi
 
 config = Config()
 
@@ -94,34 +95,20 @@ class WeChatDecrypt:
             config.set("wx_msg_db_index", msgs[-1]['id'])
         return msgs, users
 
-    def find_new_msgs_of_robot(self):
+    def find_new_msgs_of_robot(self, nickname):
         self.all_merge_real_time_db()
-        user = self.get_user_by_nickname("火麒麟")
+        user = self.get_user_by_nickname(nickname)
         msgs, users = self.get_msg_by_wxid(user['wxid'])
-        msg_text_list = [{ "id": item["id"], "content": item["msg"], "createTime": item["CreateTime"] } for item in msgs if item["type_name"] == "文本"]
-        if len(msg_text_list) > 0:
-            robot_text_msgs_list = config.get("robot_text_msgs_list")
-            robot_text_msgs_list.append({
-                "id": self.random_str(16),
-                "msg_list": msg_text_list,
-                "ineffective": False
-            })
-            config.set("robot_text_msgs_list", robot_text_msgs_list)
+        msg_text_list = [{ "role": "user", "content": item["msg"] } for item in msgs if item["type_name"] == "文本"]
         return msg_text_list
-    
-    def listen_robot_msg(self):
-        while True:
-            self.find_new_msgs_of_robot()
-            time.sleep(10)
     
 if __name__ == "__main__":
     wechat_decrypt = WeChatDecrypt()
 
     # wx_helper_core.decrypt_merge()
-    # user = wechat_decrypt.get_user_by_nickname("火麒麟")
+    # user = wechat_decrypt.get_user_by_nickname("测试2号13282127")
     # msgs, users = wechat_decrypt.get_msg_by_wxid(user['wxid'])
     
-    # wechat_decrypt.find_new_msgs_of_robot()
-    wechat_decrypt.listen_robot_msg()
+    wechat_decrypt.find_new_msgs_of_robot("测试2号13282127")
 
     # wechat_decrypt.all_merge_real_time_db()
