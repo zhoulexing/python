@@ -567,8 +567,7 @@ class WeChatGui:
             return
 
         # 6.1. 进入目标文件夹
-        image_folder = os.path.join(os.path.dirname(
-            __file__), "../../assets/images/wechat")
+        image_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../assets/images/wechat"))
         pyperclip.copy(image_folder)
         pyautogui.hotkey('ctrl', 'l')  # 激活地址栏
         time.sleep(0.5)
