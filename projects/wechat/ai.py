@@ -103,7 +103,7 @@ class WeChatAi:
             print(f"text_generator error: {e}")
             return "物美价廉，优惠满满，性价比无敌！"
 
-    def image_generator(self, description, num = 1):
+    def image_generator(self, description, num):
         print(f"image_generator params: {description}, {num}")
         image_urls = []
         try:
