@@ -11,6 +11,7 @@ from .ai import WeChatAi
 
 config = Config()
 
+
 class WeChatDecrypt:
     def __init__(self):
         self.wx_info = config.get("wxinfo")
@@ -39,14 +40,15 @@ class WeChatDecrypt:
         if not success:
             raise Exception("[-] 解密失败, 请检查key是否正确")
         self.merge_db_file = merge_db_file
-        
+
     def decrypt_msg(self):
         success, wxdbpaths = get_core_db(self.wx_info['wx_dir'], ["MSG"])
         if not success:
             raise Exception("[-] 获取数据库路径失败")
         print(f"wxdbpaths: {wxdbpaths[0]}")
         print(f"key: {self.wx_info['key']}")
-        success, list = decrypt(self.wx_info['key'], wxdbpaths[0]['db_path'], self.msg_db_file)
+        success, list = decrypt(
+            self.wx_info['key'], wxdbpaths[0]['db_path'], self.msg_db_file)
         print(f"list: {list}")
         if not success:
             raise Exception("[-] 解密失败, 请检查key是否正确")
@@ -99,16 +101,18 @@ class WeChatDecrypt:
         self.all_merge_real_time_db()
         user = self.get_user_by_nickname(nickname)
         msgs, users = self.get_msg_by_wxid(user['wxid'])
-        msg_text_list = [{ "role": "user", "content": item["msg"] } for item in msgs if item["type_name"] == "文本"]
+        msg_text_list = [{"role": "user", "content": item["msg"]}
+                         for item in msgs if item["type_name"] == "文本" and item["is_sender"] != 1]
         return msg_text_list
-    
+
+
 if __name__ == "__main__":
     wechat_decrypt = WeChatDecrypt()
 
     # wx_helper_core.decrypt_merge()
     # user = wechat_decrypt.get_user_by_nickname("测试2号13282127")
     # msgs, users = wechat_decrypt.get_msg_by_wxid(user['wxid'])
-    
+
     wechat_decrypt.find_new_msgs_of_robot("测试2号13282127")
 
     # wechat_decrypt.all_merge_real_time_db()
