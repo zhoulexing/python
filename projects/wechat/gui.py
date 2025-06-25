@@ -603,7 +603,7 @@ class WeChatGui:
         time.sleep(1)
 
         # 7. 输入文字
-        pyperclip.copy(f"{self.text}\n 朋友圈文案和图片如上，确认要发送吗？")
+        pyperclip.copy(f"朋友圈文案：{self.text}\n 朋友圈文案和图片如上，确认要发送吗？")
         pyautogui.hotkey('ctrl', 'v')
         time.sleep(1)
         pyautogui.press('enter')  # 发送
