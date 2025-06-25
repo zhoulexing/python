@@ -391,7 +391,7 @@ class WeChatGui:
 
     def set_text(self, text):
         self.text = text
-        
+
     def download_image_urls(self, image_urls):
         file_names = []
         for image_url in image_urls:
@@ -556,16 +556,16 @@ class WeChatGui:
             return
 
         # 5. 点击接受消息的人
-        if not self.click_by_image("assets/images/wechat/chat_target.png",
-                                   "assets/images/wechat/current_wechat_screenshot.png", 0.7, relative=True, rect=self.wechat_rect):
+        if not self.click_by_image("assets/images/wechat/current_wechat_screenshot.png", "assets/images/wechat/chat_target.png",
+                                   0.7, relative=True, rect=self.wechat_rect):
             print("点击接受消息的人失败")
 
         # 6. 选择要发送的文件
-        if not self.click_by_image("assets/images/wechat/chat_select_img.png",
-                                   "assets/images/wechat/current_wechat_screenshot.png", 0.7, relative=True, rect=self.wechat_rect):
+        if not self.click_by_image("assets/images/wechat/current_wechat_screenshot.png", "assets/images/wechat/chat_select_img.png",
+                                   0.7, relative=True, rect=self.wechat_rect):
             print("点击输入框失败")
             return
-        
+
         # 6.1. 进入目标文件夹
         image_folder = os.path.join(os.path.dirname(
             __file__), "../../assets/images/wechat")
@@ -593,13 +593,13 @@ class WeChatGui:
         time.sleep(0.5)
         pyautogui.press('enter')  # 确认选择
         print(f"已选择 {len(self.file_names)} 张图片")
-        
+
         # 6.3 截图，并点击发送
         screenshot = self.screenshot_wechat(
             "assets/images/wechat/current_wechat_screenshot.png"
         )
-        self.click_by_image("assets/images/wechat/chat_send_img.png",
-                            "assets/images/wechat/current_wechat_screenshot.png", 0.7, relative=True, rect=self.wechat_rect)
+        self.click_by_image("assets/images/wechat/current_wechat_screenshot.png", "assets/images/wechat/chat_send_img.png",
+                            0.7, relative=True, rect=self.wechat_rect)
         time.sleep(1)
 
         # 7. 输入文字
