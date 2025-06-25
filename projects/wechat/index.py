@@ -70,6 +70,7 @@ class WeChat:
                     })
                     self.config.set("friends_circle_material",
                                     friends_circle_material)
+                    self.wechat_ai.clear_messages()
             time.sleep(2)
 
     def test_decrypt_generate(self):

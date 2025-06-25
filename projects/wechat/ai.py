@@ -24,9 +24,11 @@ class WeChatAi:
                 """
             }
         ]
+        self.image_urls = []
 
     def clear_messages(self):
         self.messages = []
+        self.image_urls = []
 
     def execute(self):
         tools = [
@@ -120,7 +122,7 @@ class WeChatAi:
         print(f"wechat ai step: {content}, {toolCalls}")
         if content:
             json_content = json.loads(content)
-            return True, json_content.get("text"), json_content.get("image_urls")
+            return True, json_content.get("text"), self.image_urls
         if toolCalls:
             toolCalls = json.loads(toolCalls)
             for toolCall in toolCalls:
@@ -131,8 +133,9 @@ class WeChatAi:
                     arguments = json.loads(toolCall["function"]["arguments"])
                     image_urls = self.image_generator(
                         arguments["description"], arguments["num"])
+                    self.image_urls = image_urls
             self.add_message(
-                "assistant", f"图片和文案都生成好了，如下：\n文案：{text}\n图片：{image_urls}\n是否确认发布？")
+                "assistant", f"图片和文案都生成好了，是否确认发布？")
             return False, text, image_urls
         return False, "", []
 

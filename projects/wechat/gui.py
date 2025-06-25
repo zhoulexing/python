@@ -510,8 +510,7 @@ class WeChatGui:
             self.click_by_image("assets/images/wechat/current_moment_screenshot.png",
                                 "assets/images/wechat/moment_step_image.png", 0.7, relative=True, rect=self.moment_rect)
             time.sleep(1)
-            image_dir = os.path.join(os.path.dirname(
-                __file__), "../../assets/images/wechat")
+            image_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../assets/images/wechat"))
             self.select_images_from_dialog(image_dir, self.file_names)
 
         # 13. 点击发送按钮
