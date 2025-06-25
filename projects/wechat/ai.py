@@ -117,6 +117,7 @@ class WeChatAi:
 
     def step(self):
         content, toolCalls = self.execute()
+        print(f"wechat ai step: {content}, {toolCalls}")
         if content:
             json_content = json.loads(content)
             return True, json_content.get("text"), json_content.get("image_urls")
@@ -148,7 +149,10 @@ class WeChatAi:
             return False, "", []
         self.add_message("user", message)
         sussess, text, image_urls = self.step()
-        print(f"test result: {sussess}, {text}, {image_urls}")
+
+        if text and image_urls and not sussess:
+            self.add_message("user", "是的")
+            self.step()
 
 
 if __name__ == "__main__":
