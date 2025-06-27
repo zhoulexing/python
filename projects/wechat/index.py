@@ -22,6 +22,7 @@ class WeChat:
 
         self.ip = "172.18.232.82:5001"
         self.record = {}
+        self.loop_time = 2
 
     def listen_public(self):
         while True:
@@ -35,11 +36,17 @@ class WeChat:
                 self.wechat_gui.set_text(material_item["text"])
                 self.wechat_gui.download_image_urls(
                     material_item["image_urls"])
-                self.wechat_gui.send_moment()
+                try:
+                    self.wechat_gui.send_moment()
+                except Exception as e:
+                    print(f"wechat send_moment error: {e}")
+                    # 失败了，再重试一次
+                    self.wechat_gui.send_moment()
+                    
                 # requests.post(f"http://{self.ip}/wechat/set_msg_ineffective", json={
                 #     "id": material_item["id"]
                 # })
-            time.sleep(2)
+            time.sleep(self.loop_time)
 
     def decrypt_generate(self):
         """
@@ -52,13 +59,23 @@ class WeChat:
             print(f"wechat decrypt msg_text_list: {msg_text_list}")
             if len(msg_text_list) > 0:
                 for msg_text in msg_text_list:
-                    self.wechat_ai.add_message("user", msg_text["content"])
-                sussess, text, image_urls = self.wechat_ai.step()
+                    self.wechat_ai.add_message(msg_text["content"])
+                sussess, text, image_urls = self.wechat_ai.run()
+                
                 print(f"wechat ai step: {sussess}, {text}, {image_urls}")
-                if text and image_urls and not sussess:
-                    self.wechat_gui.set_text(text)
-                    self.wechat_gui.download_image_urls(image_urls)
-                    self.wechat_gui.send_msg()
+                
+                if not sussess:
+                    if text:
+                        self.wechat_gui.set_text(text)
+                    if image_urls:
+                        self.wechat_gui.download_image_urls(image_urls)
+                    try:
+                        self.wechat_gui.send_msg()
+                    except Exception as e:
+                        print(f"wechat send_msg error: {e}")
+                        # 失败了，再重试一次
+                        self.wechat_gui.send_msg()
+                        
                 if sussess:
                     friends_circle_material = self.config.get(
                         "friends_circle_material")
@@ -71,7 +88,7 @@ class WeChat:
                     self.config.set("friends_circle_material",
                                     friends_circle_material)
                     self.wechat_ai.clear_messages()
-            time.sleep(2)
+            time.sleep(self.loop_time)
 
     def test_decrypt_generate(self):
         self.wechat_gui.set_text("123")

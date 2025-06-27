@@ -1,4 +1,5 @@
 import requests
+import json
 
 class YouzanModel:
     def __init__(self):
@@ -41,9 +42,13 @@ class YouzanModel:
         if result.get("code") != 200:
             raise Exception(result.get("message"))
 
-        content = result.get("data").get("contents")[0].get("content")
-        toolCalls = result.get("data").get("contents")[0].get("toolCalls")
-        return content, toolCalls
+        contentItem = result.get("data").get("contents")[0]
+        toolCalls = json.loads(contentItem.get("toolCalls")) if contentItem.get("toolCalls") else None
+        return {
+            "role": contentItem.get("role"),
+            "content": contentItem.get("content"),
+            "toolCalls": toolCalls
+        }
 
     def generate(self, prompt):
         messages = [{

@@ -37,7 +37,12 @@ def test_copy():
     new_dict["a"] = 100
     print(original_dict)
     print(new_dict)
+    
+def test_str():
+    message = "123"
+    message += "456"
+    print(message)
 
 
 if __name__ == "__main__":
-    test_copy()
+    test_str()

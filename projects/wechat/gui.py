@@ -464,6 +464,7 @@ class WeChatGui:
             else:
                 print("未找到微信窗口")
                 return
+            time.sleep(2)
 
             # 4. 截取微信截图
             print("正在截取微信截图...")
@@ -499,9 +500,10 @@ class WeChatGui:
                             "assets/images/wechat/moment_step_text.png", 0.7, relative=True, rect=self.moment_rect)
         time.sleep(0.5)
         # 11. 输入文字
-        pyperclip.copy(self.text)
-        pyautogui.hotkey('ctrl', 'v')
-        time.sleep(1)
+        if self.text:
+            pyperclip.copy(self.text)
+            pyautogui.hotkey('ctrl', 'v')
+            time.sleep(1)
         # 12. 输入图片
         if len(self.file_names) > 0:
             self.screenshot_moment(
@@ -555,53 +557,58 @@ class WeChatGui:
             return
 
         # 5. 点击接受消息的人
-        if not self.click_by_image("assets/images/wechat/current_wechat_screenshot.png", "assets/images/wechat/chat_target.png",
+        if not self.click_by_image("assets/images/wechat/current_wechat_screenshot.png", "assets/images/wechat/chat_target_1.png",
                                    0.7, relative=True, rect=self.wechat_rect):
             print("点击接受消息的人失败")
-
-        # 6. 选择要发送的文件
-        if not self.click_by_image("assets/images/wechat/current_wechat_screenshot.png", "assets/images/wechat/chat_select_img.png",
-                                   0.7, relative=True, rect=self.wechat_rect):
-            print("点击输入框失败")
             return
 
-        # 6.1. 进入目标文件夹
-        image_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../assets/images/wechat"))
-        pyperclip.copy(image_folder)
-        pyautogui.hotkey('ctrl', 'l')  # 激活地址栏
-        time.sleep(0.5)
-        pyautogui.hotkey('ctrl', 'a')  # 全选
-        time.sleep(0.2)
-        pyautogui.press('delete')
-        time.sleep(0.2)
-        pyautogui.hotkey('ctrl', 'v')  # 粘贴文件夹路径
-        time.sleep(0.5)
+        if len(self.file_names) > 0:
+            # 6. 选择要发送的文件
+            if not self.click_by_image("assets/images/wechat/current_wechat_screenshot.png", "assets/images/wechat/chat_select_img.png",
+                                    0.7, relative=True, rect=self.wechat_rect):
+                print("点击输入框失败")
+                return
+
+            # 6.1. 进入目标文件夹
+            image_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../assets/images/wechat"))
+            pyperclip.copy(image_folder)
+            pyautogui.hotkey('ctrl', 'l')  # 激活地址栏
+            time.sleep(0.5)
+            pyautogui.hotkey('ctrl', 'a')  # 全选
+            time.sleep(0.2)
+            pyautogui.press('delete')
+            time.sleep(0.2)
+            pyautogui.hotkey('ctrl', 'v')  # 粘贴文件夹路径
+            time.sleep(0.5)
+            pyautogui.press('enter')
+            time.sleep(1)
+
+            # 6.2. 粘贴所有文件名到文件名输入框
+            filenames_str = ' '.join(f'"{name}"' for name in self.file_names)
+            pyperclip.copy(filenames_str)
+            pyautogui.hotkey('alt', 'n')  # 激活文件名输入框
+            pyautogui.hotkey('ctrl', 'a')  # 全选
+            time.sleep(0.2)
+            pyautogui.press('delete')
+            time.sleep(0.2)
+            pyautogui.hotkey('ctrl', 'v')  # 粘贴文件名
+            time.sleep(0.5)
+            pyautogui.press('enter')  # 确认选择
+            print(f"已选择 {len(self.file_names)} 张图片")
+
+            # 6.3 截图，并点击发送
+            screenshot = self.screenshot_wechat(
+                "assets/images/wechat/current_wechat_screenshot.png"
+            )
+            self.click_by_image("assets/images/wechat/current_wechat_screenshot.png", "assets/images/wechat/chat_send_img.png",
+                                0.7, relative=True, rect=self.wechat_rect)
+            time.sleep(1)
+
+        if self.text:
+            # 7. 输入文字
+            pyperclip.copy(f"{self.text}")
+            pyautogui.hotkey('ctrl', 'v')
+            time.sleep(1)
+
+        # 8. 点击发送按钮
         pyautogui.press('enter')
-        time.sleep(1)
-
-        # 6.2. 粘贴所有文件名到文件名输入框
-        filenames_str = ' '.join(f'"{name}"' for name in self.file_names)
-        pyperclip.copy(filenames_str)
-        pyautogui.hotkey('alt', 'n')  # 激活文件名输入框
-        pyautogui.hotkey('ctrl', 'a')  # 全选
-        time.sleep(0.2)
-        pyautogui.press('delete')
-        time.sleep(0.2)
-        pyautogui.hotkey('ctrl', 'v')  # 粘贴文件名
-        time.sleep(0.5)
-        pyautogui.press('enter')  # 确认选择
-        print(f"已选择 {len(self.file_names)} 张图片")
-
-        # 6.3 截图，并点击发送
-        screenshot = self.screenshot_wechat(
-            "assets/images/wechat/current_wechat_screenshot.png"
-        )
-        self.click_by_image("assets/images/wechat/current_wechat_screenshot.png", "assets/images/wechat/chat_send_img.png",
-                            0.7, relative=True, rect=self.wechat_rect)
-        time.sleep(1)
-
-        # 7. 输入文字
-        pyperclip.copy(f"朋友圈文案：{self.text}\n 朋友圈文案和图片如上，确认要发送吗？")
-        pyautogui.hotkey('ctrl', 'v')
-        time.sleep(1)
-        pyautogui.press('enter')  # 发送
