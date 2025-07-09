@@ -42,10 +42,7 @@ class WeChat:
                     print(f"wechat send_moment error: {e}")
                     # 失败了，再重试一次
                     self.wechat_gui.send_moment()
-                    
-                # requests.post(f"http://{self.ip}/wechat/set_msg_ineffective", json={
-                #     "id": material_item["id"]
-                # })
+            
             time.sleep(self.loop_time)
 
     def decrypt_generate(self):
@@ -54,8 +51,9 @@ class WeChat:
         轮询解密数据库，如果解密到新的消息，则调用ai来判定是否需要发布朋友圈，并生成朋友圈文案
         """
         while True:
+            # 获取最新的消息
             msg_text_list = self.wechat_decrypt.find_new_msgs_of_robot(
-                "测试2号13282127")
+                "测试2号xxxxx")
             print(f"wechat decrypt msg_text_list: {msg_text_list}")
             if len(msg_text_list) > 0:
                 for msg_text in msg_text_list:
@@ -70,6 +68,7 @@ class WeChat:
                     if image_urls:
                         self.wechat_gui.download_image_urls(image_urls)
                     try:
+                        # 此处通过rpa来发送消息
                         self.wechat_gui.send_msg()
                     except Exception as e:
                         print(f"wechat send_msg error: {e}")

@@ -4,21 +4,23 @@ import os
 import random
 import string
 import json
-from datetime import datetime, timedelta
 from utils.config import Config
-import time
-from .ai import WeChatAi
 
 config = Config()
 
 
 class WeChatDecrypt:
     def __init__(self):
-        self.wx_info = config.get("wxinfo")
+        # 此方法能获取登录微信的账号信息和关键密钥key
+        self.wx_info = self.get_wx_info()
+        # 合并后的数据库文件路径
         self.merge_db_file = os.path.join(
             os.path.dirname(__file__), "../../assets/wx_db/merge_1750666183.db")
+        # 消息数据库文件路径
         self.msg_db_file = os.path.join(
             os.path.dirname(__file__), "../../assets/wx_db/msg.db")
+        # 消息数据库索引
+        self.msg_db_index = config.get("wx_msg_db_index")
 
     def random_str(self, num=16):
         return ''.join(random.sample(string.ascii_letters + string.digits, num))
@@ -34,6 +36,7 @@ class WeChatDecrypt:
         output_path = os.path.join(
             os.path.dirname(__file__), "../../assets/wx_db")
 
+        # 解密多个数据库并合并成一个到output_path目录下
         success, merge_db_file = decrypt_merge(
             self.wx_info['wx_dir'], self.wx_info['key'], output_path)
         print(f"decrypt_merge_result: {success}, {merge_db_file}")
@@ -42,6 +45,7 @@ class WeChatDecrypt:
         self.merge_db_file = merge_db_file
 
     def decrypt_msg(self):
+        # 获取微信数据库路径
         success, wxdbpaths = get_core_db(self.wx_info['wx_dir'], ["MSG"])
         if not success:
             raise Exception("[-] 获取数据库路径失败")
@@ -53,7 +57,9 @@ class WeChatDecrypt:
         if not success:
             raise Exception("[-] 解密失败, 请检查key是否正确")
 
+
     def all_merge_real_time_db(self):
+        # 合并所有临时数据库，后面要轮询执行，实时拿到最新的消息
         code, ret = all_merge_real_time_db(key=self.wx_info['key'], wx_path=self.wx_info['wx_dir'], merge_path=self.merge_db_file,
                                            real_time_exe_path=None)
         print(f"all_merge_real_time_db_result: {code}, {ret}")
@@ -108,11 +114,4 @@ class WeChatDecrypt:
 
 if __name__ == "__main__":
     wechat_decrypt = WeChatDecrypt()
-
-    # wx_helper_core.decrypt_merge()
-    # user = wechat_decrypt.get_user_by_nickname("测试2号13282127")
-    # msgs, users = wechat_decrypt.get_msg_by_wxid(user['wxid'])
-
-    wechat_decrypt.find_new_msgs_of_robot("测试2号13282127")
-
-    # wechat_decrypt.all_merge_real_time_db()
+    wechat_decrypt.find_new_msgs_of_robot("测试2号xxxxx")

@@ -1,5 +1,5 @@
-from ai.youzan import YouzanModel
-from ai.zjie import ZjieModel
+from ai.llm.youzan import YouzanModel
+from ai.llm.zjie import ZjieModel
 import json
 import random
 import string
@@ -23,7 +23,6 @@ class WeChatAi:
                 5. 其他输入：跟朋友圈不相关的请求，将不予处理。
 
                 要求：
-                - 你不需要思考，直接根据用户的需求，使用工具来完成任务；
                 - 在使用发送朋友圈消息工具时，需要用户确认文案和/或图片后，再使用， 且使用时一定是有文案或图片或者两者都有；
                 """
             }
@@ -115,18 +114,6 @@ class WeChatAi:
             {
                 "role": "system",
                 "content": "根据用户的要求生成朋友圈文案，文案字数在50字以内"
-                # "content": """
-                # 你需要根据用户的输入来判定是用AI生成朋友圈文案还是直接返回用户输入的内容,
-                # 如果用户的输入要求用AI生成，则根据用户要求生成朋友圈文案，文案字数在20字以内，不要超过20字
-                # 如果用户的输入没有要求用AI生成，则返回用户输入的内容。
-
-                # 示例：
-                # 用户的输入：拉布布蛋糕|这阵风还在吹,三款快入手
-                # 你的输出：拉布布蛋糕|这阵风还在吹,三款快入手
-
-                # 用户的输入：用ai生成，要形容蛋糕好吃
-                # 你的输出：甜而不腻，入口即化，每一口都是幸福的味道
-                # """
             },
             {
                 "role": "user",
@@ -213,14 +200,12 @@ class WeChatAi:
 
         return False, text, image_urls
 
-    def add_message(self, content):
+    def run(self, input_text):
+        if not input_text:
+            raise Exception("input_text is required")
+        
         self.messages.append({
             "role": "user",
-            "content": content
+            "content": input_text
         })
-
-    def run(self, message):
-        if not message:
-            raise Exception("message is required")
-        self.add_message(message)
         return self.step()
