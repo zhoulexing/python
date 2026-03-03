@@ -1,6 +1,8 @@
 """
 Example Controller 控制器层 - CBV 版本
 """
+from datetime import datetime
+
 from fastapi import Depends, Query
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
@@ -43,4 +45,19 @@ class ExampleController:
             data=ExampleResponse.from_model(user),
             msg="查询成功"
         )
+
+
+
+@router.get("/user/mock", response_model=BaseResponse[ExampleResponse])
+async def get_mock_user():
+    """获取 Mock 用户数据（无需数据库）"""
+    now = datetime.now()
+    mock = ExampleResponse(
+        id=1,
+        name="张三",
+        phone="13800138000",
+        created_at=now,
+        updated_at=now,
+    )
+    return BaseResponse.ok(data=mock, msg="查询成功")
 

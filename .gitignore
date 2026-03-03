@@ -1,0 +1,26 @@
+venv/
+.venv/
+logs/
+.idea/
+.DS_Store
+.vscode/
+__pycache__/
+.ipynb_checkpoints/
+dist/
+build/
+node_modules/
+
+# 忽略 config 配置文件，因为带有 token 类的信息，容易被泄露
+config/application-*.properties
+!application-demo.properties
+vector-*.properties
+!vector-demo.properties
+
+.claude
+.specify
+
+# Docling 模型缓存
+.hf_cache/
+
+.venv/
+.env
