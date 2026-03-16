@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown实时渲染器</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/lib/marked.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h1>Markdown实时渲染器</h1>
+            <div class="toolbar">
+                <button id="toggle-sync" class="btn-secondary">同步滚动</button>
+                <button id="fullscreen-editor" class="btn-secondary">全屏编辑</button>
+                <button id="fullscreen-preview" class="btn-secondary">全屏预览</button>
+                <button id="export-html" class="btn-primary">导出HTML</button>
+            </div>
+        </header>
+        
+        <div class="container">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <h2>Markdown编辑器</h2>
+                    <div class="panel-actions">
+                        <button id="clear-editor" class="btn-text">清空</button>
+                        <button id="load-example" class="btn-text">示例</button>
+                    </div>
+                </div>
+                <textarea 
+                    id="editor" 
+                    placeholder="在此输入Markdown文本...
+
+# 欢迎使用Markdown渲染器
+
+## 特性
+- 实时预览
+- 语法高亮
+- 同步滚动
+- 导出功能
+
+### 代码示例
+```javascript
+console.log('Hello World!');
+```
+
+### 表格
+| 列1 | 列2 | 列3 |
+|-----|-----|-----|
+| 数据1 | 数据2 | 数据3 |
+
+### 列表
+1. 有序列表项1
+2. 有序列表项2
+   - 无序子项1
+   - 无序子项2
+
+### 链接和图片
+[GitHub](https://github.com)
+
+> 这是一个引用块
+> 可以包含多行内容"
+                ></textarea>
+                <div class="editor-footer">
+                    <span id="word-count">字符数: 0</span>
+                    <span id="line-count">行数: 1</span>
+                </div>
+            </div>
+            
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <h2>预览</h2>
+                    <div class="panel-actions">
+                        <button id="copy-rich-text" class="btn-primary">复制到公众号</button>
+                        <button id="copy-xiaohongshu" class="btn-primary">复制到小红书</button>
+                        <button id="copy-html" class="btn-text">复制HTML</button>
+                        <button id="print-preview" class="btn-text">打印</button>
+                    </div>
+                </div>
+                <div id="preview" class="markdown-body"></div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>支持标准Markdown语法 | 基于 <a href="https://marked.js.org/" target="_blank">Marked.js</a></p>
+        </footer>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
